@@ -6,4 +6,5 @@
 - pipeline
 - VAO&VBO&EBO
 - shaders and basic glsl
-![image](https://github.com/tingxia1028/learnopengl/blob/feature/triangles/readmeimgs/first_practice_triangles.png =400*300)
+
+![image](https://github.com/tingxia1028/learnopengl/raw/master/readmeimgs/first_practice_triangles.png =400*300)
