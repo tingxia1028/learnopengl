@@ -47,7 +47,6 @@ void Loader::storeDataInAttributeList(float *data, int size, GLuint *indices,
   // VAO
   glVertexAttribPointer(0, dimension, GL_FLOAT, GL_FALSE,
                         dimension * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(0);
 }
 void Loader::unbind() {
   glBindVertexArray(0);
