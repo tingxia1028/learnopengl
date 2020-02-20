@@ -6,8 +6,7 @@ class RawModel {
 public:
   GLuint vaoID;
   int vertexCounts;
-  GLuint textureID;
-  int vaoMaxIndex;
+  int vaoMaxIndex = 1;
   RawModel(){};
   RawModel(GLuint vId, int vCount);
 };
