@@ -7,4 +7,4 @@
 - VAO&VBO&EBO
 - shaders and basic glsl
 
-![image](https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/first_practice_triangles.png)
+![image](https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/first_practice_triangles.png =400*300)
