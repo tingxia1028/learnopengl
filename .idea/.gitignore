@@ -1,0 +1,10 @@
+# Default ignored files
+*~
+cmake-build-debug
+src/build
+src/bin
+src/objs
+build
+.vscode
+.DS_Store
+/workspace.xml
