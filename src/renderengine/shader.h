@@ -12,17 +12,22 @@ public:
   ShaderInfo(GLenum sType, std::string fPath);
 };
 
-class Shader {
+class ShaderProgram {
 public:
   GLuint programID;
-  Shader(ShaderInfo shaders[], const int size);
+  ShaderProgram(ShaderInfo *shaders, const int size);
+  void createProgram();
   void use();
+  void cleanUp();
   // set uniform values
-  void set4Float(const std::string name, float r, float g, float b,
-                 float alpha);
+  void uniformSet4Float(const std::string name, float r, float g, float b,
+                        float alpha);
+  void uniformSet1Int(const std::string name, int value);
 
 private:
   void checkCompileErrors(unsigned int shader, GLenum type);
+  ShaderInfo *shaders;
+  int size;
 };
 
 #endif // OPENGL_SHADER_H

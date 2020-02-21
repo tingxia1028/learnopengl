@@ -2,7 +2,7 @@
 #ifndef OPENGL_RENDER_H
 #define OPENGL_RENDER_H
 
-#include "rawmodel.h"
+#include "../model/rawmodel.h"
 class Render {
 public:
   void prepare();

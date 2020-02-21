@@ -11,7 +11,10 @@ ShaderInfo::ShaderInfo(GLenum sType, std::string fPath) {
   filePath = fPath;
 }
 
-Shader::Shader(ShaderInfo shaders[], const int size) {
+ShaderProgram::ShaderProgram(ShaderInfo *shaders, const int size)
+    : shaders(shaders), size(size){};
+
+void ShaderProgram::createProgram() {
   programID = glCreateProgram();
   for (int i = 0; i < size; ++i) {
     ShaderInfo shaderInfo = shaders[i];
@@ -42,15 +45,17 @@ Shader::Shader(ShaderInfo shaders[], const int size) {
   }
 
   glLinkProgram(programID);
+}
 
+void ShaderProgram::use() { glUseProgram(programID); }
+
+void ShaderProgram::cleanUp() {
   for (int i = 0; i < size; ++i) {
     glDeleteShader(shaders[i].shaderID);
   }
 }
 
-void Shader::use() { glUseProgram(programID); }
-
-void Shader::checkCompileErrors(unsigned int shader, GLenum type) {
+void ShaderProgram::checkCompileErrors(unsigned int shader, GLenum type) {
   GLint success;
   GLchar infoLog[1024];
   if (NULL != type) {
@@ -76,7 +81,11 @@ void Shader::checkCompileErrors(unsigned int shader, GLenum type) {
   }
 }
 
-void Shader::set4Float(const std::string name, float r, float g, float b,
-                       float alpha) {
+void ShaderProgram::uniformSet4Float(const std::string name, float r, float g,
+                                     float b, float alpha) {
   glUniform4f(glGetUniformLocation(programID, name.c_str()), r, g, b, alpha);
+}
+
+void ShaderProgram::uniformSet1Int(const std::string name, int value) {
+  glUniform1i(glGetUniformLocation(programID, name.c_str()), value);
 }
