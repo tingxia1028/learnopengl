@@ -13,4 +13,4 @@ set(GLFW_LINK /usr/local/Cellar/glfw/3.3.1/lib/libglfw.3.dylib)
 link_libraries(${GLFW_LINK})
 
 # 执行编译命令
-add_executable(opengl src/main.cpp src/glad.c src/renderengine/shader.cpp src/renderengine/shader.h src/renderengine/rawmodel.cpp src/renderengine/rawmodel.h src/renderengine/loader.cpp src/renderengine/loader.h src/renderengine/render.cpp src/renderengine/render.h src/renderengine/DisplayManager.cpp src/renderengine/DisplayManager.h)
+add_executable(opengl src/main.cpp src/glad.c src/renderengine/shader.cpp src/renderengine/shader.h src/model/rawmodel.cpp src/model/rawmodel.h src/renderengine/loader.cpp src/renderengine/loader.h src/renderengine/render.cpp src/renderengine/render.h src/renderengine/DisplayManager.cpp src/renderengine/DisplayManager.h src/renderengine/stb_image.cpp)

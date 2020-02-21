@@ -34,27 +34,48 @@ int main() {
   /**
    * data
    */
-  float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.5f, 0.5f,
-                      0.0f,  0.5f,  1.0f, 0.0f, 1.0f,  1.0f, 0.0f};
-  GLuint vertexIndices[] = {0, 1, 2, 2, 3, 4};
+  float vertices[] = {0.5f,  0.5f,  0.0f, 0.5f,  -0.5f, 0.0f,
+                      -0.5f, -0.5f, 0.0f, -0.5f, 0.5f,  0.0f};
+  float textureCoords[] = {1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+  GLuint vertexIndices[] = {0, 1, 3, 1, 2, 3};
 
   /**
-   * load data
+   * load vao
    */
-  Loader loader = Loader();
-  loader.loadToVAO(vertices, sizeof(vertices), vertexIndices,
-                   sizeof(vertexIndices), NumVertices, 3);
+  Data<float> verticesData, textureCoordsData;
+  Data<GLuint> indicesData;
+  verticesData.data = vertices;
+  verticesData.sizeOfData = sizeof(vertices);
+  verticesData.dataDimension = 3;
+  textureCoordsData.data = textureCoords;
+  textureCoordsData.sizeOfData = sizeof(textureCoords);
+  textureCoordsData.dataDimension = 2;
+  indicesData.data = vertexIndices;
+  indicesData.sizeOfData = sizeof(vertexIndices);
+  RawModel rawModel = RawModel();
+  rawModel.vertexCounts = NumVertices;
+  VAOLoader vaoLoader = VAOLoader(verticesData, textureCoordsData, indicesData,
+                                  NumVertices, &rawModel);
+  vaoLoader.load();
+
+  /**
+   * load texture imgs
+   */
+  TextureLoader textureLoader =
+      TextureLoader("../resources/textures/duoduo.JPG", &rawModel);
+  textureLoader.load();
 
   /**
    * load shaders
    */
   const int SHADER_NUM = 2;
   ShaderInfo shaders[SHADER_NUM] = {
-      {GL_VERTEX_SHADER,
-       "/Users/tingxia/leap/code/c++_code/opengl/src/shaders/shader.vs"},
-      {GL_FRAGMENT_SHADER, "/Users/tingxia/leap/code/c++_code/opengl/src/"
-                           "shaders/shader.fs"}};
-  Shader ourShader(shaders, SHADER_NUM);
+      {GL_VERTEX_SHADER, "../src/shaders/shader.vs"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/shader.fs"}};
+  ShaderProgram shaderProgram = ShaderProgram(shaders, SHADER_NUM);
+  shaderProgram.createProgram();
+  shaderProgram.use();
+  shaderProgram.uniformSet1Int("texture1", 0);
 
   /**
    * render loop
@@ -64,19 +85,16 @@ int main() {
     displayManager.processInput();
 
     render.prepare();
-
-    ourShader.use();
-    ourShader.set4Float("ourColor", 0.0f, sin(glfwGetTime()) / 2.0f + 0.5f,
-                        0.0f, 1.0f);
-    render.render(loader.rawModel);
+    render.render(*vaoLoader.rawModel);
 
     displayManager.afterward();
     // poll IO events, eg. mouse moved etc.
     glfwPollEvents();
   }
 
-  //  loader.cleanup();
-  loader.cleanup();
+  vaoLoader.cleanup();
+  textureLoader.cleanup();
+  shaderProgram.cleanUp();
   displayManager.destroy();
   glfwTerminate();
 

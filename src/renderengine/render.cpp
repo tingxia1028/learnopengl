@@ -12,9 +12,12 @@ void Render::render(RawModel rawModel) {
   for (int i = 0; i < vaoMaxIndex; ++i) {
     glEnableVertexAttribArray(i);
   }
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, rawModel.textureID);
   glDrawElements(GL_TRIANGLES, rawModel.vertexCounts, GL_UNSIGNED_INT, 0);
   for (int i = 0; i < vaoMaxIndex; ++i) {
     glDisableVertexAttribArray(i);
   }
   glBindVertexArray(0);
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
