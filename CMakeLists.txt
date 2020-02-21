@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 11)
 # 添加头文件
 set(GLFW_H /usr/local/Cellar/glfw/3.3.1/include)
 set(INCLUDE_H /usr/local/include)
-include_directories(${GLFW_H} ${INCLUDE_H})
+set(GLM_H /usr/local/Cellar/glm/0.9.9.5/include)
+include_directories(${GLFW_H} ${INCLUDE_H} ${GLM_H})
 
 # 添加目标链接
 set(GLFW_LINK /usr/local/Cellar/glfw/3.3.1/lib/libglfw.3.dylib)

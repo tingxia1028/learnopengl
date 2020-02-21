@@ -2,6 +2,7 @@
 #define OPENGL_SHADER_H
 
 #include <glad/glad.h>
+#include <glm/mat4x4.hpp>
 #include <string>
 
 class ShaderInfo {
@@ -23,6 +24,7 @@ public:
   void uniformSet4Float(const std::string name, float r, float g, float b,
                         float alpha);
   void uniformSet1Int(const std::string name, int value);
+  void uniformSetMat4fv(const std::string name, glm::mat4 value);
 
 private:
   void checkCompileErrors(unsigned int shader, GLenum type);

@@ -8,8 +8,9 @@
 #include "renderengine/shader.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-#include <math.h>
 
 constexpr int SCR_WIDTH = 800;
 constexpr int SCR_HEIGHT = 600;
@@ -66,6 +67,14 @@ int main() {
   textureLoader.load();
 
   /**
+   * transformation
+   */
+  glm::mat4 trans = glm::mat4(1.0f);
+  trans = glm::translate(trans, glm::vec3(-0.2, 0, 0));
+  trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+  trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
+
+  /**
    * load shaders
    */
   const int SHADER_NUM = 2;
@@ -76,6 +85,7 @@ int main() {
   shaderProgram.createProgram();
   shaderProgram.use();
   shaderProgram.uniformSet1Int("texture1", 0);
+  shaderProgram.uniformSetMat4fv("transform", trans);
 
   /**
    * render loop
