@@ -1,6 +1,5 @@
 
-#include "DisplayManager.h"
-#include <GLFW/glfw3.h>
+#include "displaymanager.h"
 #include <iostream>
 
 DisplayManager::DisplayManager(int w, int h, std::string name)
@@ -34,7 +33,7 @@ bool DisplayManager::create() {
     return false;
   }
   glfwMakeContextCurrent(window);
-  //  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   return true;
 }
 
@@ -46,7 +45,7 @@ void DisplayManager::processInput() {
 
 void DisplayManager::framebuffer_size_callback(GLFWwindow *window, int width,
                                                int height) {
-  //  glViewport(0, 0, width, height);
+  glViewport(0, 0, width, height);
 }
 
 bool DisplayManager::shouldClose() { return glfwWindowShouldClose(window); }

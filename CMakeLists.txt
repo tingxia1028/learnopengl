@@ -14,4 +14,9 @@ set(GLFW_LINK /usr/local/Cellar/glfw/3.3.1/lib/libglfw.3.dylib)
 link_libraries(${GLFW_LINK})
 
 # 执行编译命令
-add_executable(opengl src/main.cpp src/glad.c src/renderengine/shader.cpp src/renderengine/shader.h src/model/rawmodel.cpp src/model/rawmodel.h src/renderengine/loader.cpp src/renderengine/loader.h src/renderengine/render.cpp src/renderengine/render.h src/renderengine/DisplayManager.cpp src/renderengine/DisplayManager.h src/renderengine/stb_image.cpp)
+add_executable(opengl src/main.cpp src/glad.c src/renderengine/shader.cpp src/renderengine/shader.h src/renderengine/loader.cpp src/renderengine/loader.h src/renderengine/render.cpp src/renderengine/render.h src/renderengine/displaymanager.cpp src/renderengine/displaymanager.h src/renderengine/stb_image.cpp src/transformation/rotate.cpp src/transformation/rotate.h src/transformation/transformation.cpp src/transformation/transformation.h src/camera/camera.cpp src/camera/camera.h src/model/model.cpp src/model/model.h src/model/Scene.cpp src/model/Scene.h)
+
+
+if (APPLE)
+    target_link_libraries(opengl "-framework OpenGL")
+endif()

@@ -2,7 +2,8 @@
 #define GLFW_INCLUDE_NONE
 #endif
 
-#include "renderengine/DisplayManager.h"
+#include "model/Scene.h"
+#include "renderengine/displaymanager.h"
 #include "renderengine/loader.h"
 #include "renderengine/render.h"
 #include "renderengine/shader.h"
@@ -14,7 +15,6 @@
 
 constexpr int SCR_WIDTH = 800;
 constexpr int SCR_HEIGHT = 600;
-constexpr int NumVertices = 6;
 
 int main() {
   /**
@@ -33,46 +33,64 @@ int main() {
   }
 
   /**
-   * data
+   * gl global configuration
    */
-  float vertices[] = {0.5f,  0.5f,  0.0f, 0.5f,  -0.5f, 0.0f,
-                      -0.5f, -0.5f, 0.0f, -0.5f, 0.5f,  0.0f};
-  float textureCoords[] = {1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
-  GLuint vertexIndices[] = {0, 1, 3, 1, 2, 3};
+  //  glEnable(GL_DEPTH_TEST);
+
+  /**
+   * data cube
+   */
+  //  std::vector<float> vertices = {
+  //      -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,
+  //      0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
+  //      0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,
+  //      -0.5f, 0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f,
+  //      0.5f,  -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,
+  //      0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  -0.5f,
+  //      0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,
+  //      0.5f,  0.5f,  -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f,
+  //      0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f,
+  //      -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
+  //      0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f};
+  //  std::vector<float> textureCoords = {
+  //      0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+  //      0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+  //      0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+  //      0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+  //      0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+  //      0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+  //      0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+  std::vector<float> vertices = {0.5f,  0.5f,  0.0f, 0.5f,  -0.5f, 0.0f,
+                                 -0.5f, -0.5f, 0.0f, -0.5f, 0.5f,  0.0f};
+  std::vector<float> textureCoords = {1.0f, 1.0f, 1.0f, 0.0f,
+                                      0.0f, 0.0f, 0.0f, 1.0f};
+  std::vector<GLuint> indices = {
+      0, 1, 3, // first triangle
+      1, 2, 3  // second triangle
+  };
+  TextureData textureData = TextureData("../resources/textures/container2.png");
+  int numOfVertices = 6;
 
   /**
    * load vao
    */
-  Data<float> verticesData, textureCoordsData;
-  Data<GLuint> indicesData;
-  verticesData.data = vertices;
-  verticesData.sizeOfData = sizeof(vertices);
-  verticesData.dataDimension = 3;
-  textureCoordsData.data = textureCoords;
-  textureCoordsData.sizeOfData = sizeof(textureCoords);
-  textureCoordsData.dataDimension = 2;
-  indicesData.data = vertexIndices;
-  indicesData.sizeOfData = sizeof(vertexIndices);
-  RawModel rawModel = RawModel();
-  rawModel.vertexCounts = NumVertices;
-  VAOLoader vaoLoader = VAOLoader(verticesData, textureCoordsData, indicesData,
-                                  NumVertices, &rawModel);
+  std::vector<TextureData> textures;
+  textures.push_back(textureData);
+  std::vector<Model> models;
+  Transformation transformation = Transformation(
+      glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), nullptr);
+  models.push_back(Model(vertices, numOfVertices, indices, textures,
+                         textureCoords, transformation));
+  Camera camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+  Scene scene = Scene(models, camera);
+  VAOLoader vaoLoader = VAOLoader(&scene);
   vaoLoader.load();
 
   /**
-   * load texture imgs
+   * load texture
    */
-  TextureLoader textureLoader =
-      TextureLoader("../resources/textures/duoduo.JPG", &rawModel);
+  TextureLoader textureLoader = TextureLoader(&scene);
   textureLoader.load();
-
-  /**
-   * transformation
-   */
-  glm::mat4 trans = glm::mat4(1.0f);
-  trans = glm::translate(trans, glm::vec3(-0.2, 0, 0));
-  trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-  trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
 
   /**
    * load shaders
@@ -84,8 +102,6 @@ int main() {
   ShaderProgram shaderProgram = ShaderProgram(shaders, SHADER_NUM);
   shaderProgram.createProgram();
   shaderProgram.use();
-  shaderProgram.uniformSet1Int("texture1", 0);
-  shaderProgram.uniformSetMat4fv("transform", trans);
 
   /**
    * render loop
@@ -95,7 +111,7 @@ int main() {
     displayManager.processInput();
 
     render.prepare();
-    render.render(*vaoLoader.rawModel);
+    render.render(scene, shaderProgram);
 
     displayManager.afterward();
     // poll IO events, eg. mouse moved etc.

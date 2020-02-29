@@ -2,21 +2,22 @@
 #ifndef OPENGL_LOADER_H
 #define OPENGL_LOADER_H
 
-#include "../model/rawmodel.h"
+#include "../model/Scene.h"
+#include "../model/model.h"
 #include <glad/glad.h>
 #include <string>
 #include <vector>
 
 class AbstractLoader {
 public:
-  AbstractLoader(RawModel *rawModel) : rawModel(rawModel){};
+  AbstractLoader(Scene *scene) : scene(scene){};
   virtual void load() {
     create();
     storeData();
     unbind();
   };
   virtual void cleanup() = 0;
-  RawModel *rawModel;
+  Scene *scene;
 
 private:
   virtual void create() = 0;
@@ -24,16 +25,9 @@ private:
   virtual void unbind() = 0;
 };
 
-template <class T> struct Data {
-  T *data;
-  int sizeOfData;
-  int dataDimension;
-};
-
 class VAOLoader : public AbstractLoader {
 public:
-  VAOLoader(Data<float> vertexData, Data<float> textureCoords,
-            Data<GLuint> indicesData, const int vertexNum, RawModel *rawModel);
+  VAOLoader(Scene *scene);
   void cleanup() override;
 
 private:
@@ -43,22 +37,19 @@ private:
   std::vector<GLuint> vaos;
   std::vector<GLuint> vbos;
   std::vector<GLuint> ebos;
-  Data<float> vertexData;
-  Data<float> textureCoords;
-  Data<GLuint> indicesData;
-  int vertexNum;
 };
 
 class TextureLoader : public AbstractLoader {
 public:
-  TextureLoader(std::string texturePath, RawModel *rawModel);
+  TextureLoader(Scene *scene);
   void cleanup() override;
+  void load() override;
 
 private:
   void create() override;
   void storeData() override;
   void unbind() override;
-  std::string texturePath;
+  TextureData *textureData;
   std::vector<GLuint> textures;
 };
 

@@ -24,7 +24,7 @@ public:
   void uniformSet4Float(const std::string name, float r, float g, float b,
                         float alpha);
   void uniformSet1Int(const std::string name, int value);
-  void uniformSetMat4fv(const std::string name, glm::mat4 value);
+  void uniformSetMat4fv(const std::string name, glm::mat4 &value);
 
 private:
   void checkCompileErrors(unsigned int shader, GLenum type);

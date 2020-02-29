@@ -91,7 +91,7 @@ void ShaderProgram::uniformSet1Int(const std::string name, int value) {
   glUniform1i(glGetUniformLocation(programID, name.c_str()), value);
 }
 
-void ShaderProgram::uniformSetMat4fv(const std::string name, glm::mat4 value) {
+void ShaderProgram::uniformSetMat4fv(const std::string name, glm::mat4 &value) {
   glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE,
-                     glm::value_ptr(value));
+                     &value[0][0]);
 }
