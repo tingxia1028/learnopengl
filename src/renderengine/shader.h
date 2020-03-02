@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <glm/mat4x4.hpp>
 #include <string>
+#include <vector>
 
 class ShaderInfo {
 public:
@@ -16,7 +17,7 @@ public:
 class ShaderProgram {
 public:
   GLuint programID;
-  ShaderProgram(ShaderInfo *shaders, const int size);
+  ShaderProgram(std::vector<ShaderInfo> &shaders);
   void createProgram();
   void use();
   void cleanUp();
@@ -24,12 +25,11 @@ public:
   void uniformSet4Float(const std::string name, float r, float g, float b,
                         float alpha);
   void uniformSet1Int(const std::string name, int value);
-  void uniformSetMat4fv(const std::string name, glm::mat4 &value);
+  void uniformSetMat4(const std::string name, glm::mat4 &value);
 
 private:
   void checkCompileErrors(unsigned int shader, GLenum type);
-  ShaderInfo *shaders;
-  int size;
+  std::vector<ShaderInfo> shaders;
 };
 
 #endif // OPENGL_SHADER_H

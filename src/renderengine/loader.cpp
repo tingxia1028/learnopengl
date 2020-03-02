@@ -50,11 +50,11 @@ void VAOLoader::storeData() {
                (vertices.size() + textureCoords.size()) * sizeof(float),
                nullptr, GL_STATIC_DRAW);
   glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float),
-                  &vertices);
+                  &vertices[0]);
   glBufferSubData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
-                  textureCoords.size() * sizeof(float), &textureCoords);
+                  textureCoords.size() * sizeof(float), &textureCoords[0]);
 
-  // VEO
+  //   VEO
   if (!indices.empty()) {
     GLuint VEO;
     glGenBuffers(1, &VEO);

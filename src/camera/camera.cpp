@@ -2,6 +2,7 @@
 #include "camera.h"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 Camera::Camera(const glm::vec3 position, const glm::vec3 worldUp,
                const float angleXZ, float angleXY, float fov, float width,

@@ -10,8 +10,8 @@ public:
   GLuint vaoID;
   int maxVaoIndex;
   std::vector<Model> models;
-  Camera camera;
-  Scene(std::vector<Model> &models, Camera camera);
+  Camera *camera;
+  Scene(std::vector<Model> &models, Camera *camera);
 };
 
 #endif // OPENGL_SCENE_H

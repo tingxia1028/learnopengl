@@ -4,13 +4,13 @@
 #include <iostream>
 
 ArbitraryAxisRotate::ArbitraryAxisRotate(const glm::vec3 &unitAxis, float angle)
-    : unitAxis(glm::normalize(unitAxis)), rotateDegree(rotateDegree){};
+    : unitAxis(glm::normalize(unitAxis)), rotateDegree(angle){};
 
 glm::mat4 ArbitraryAxisRotate::getRotateMat() {
   return glm::rotate(glm::mat4(1.0f), glm::radians(rotateDegree), unitAxis);
 }
 
-EulerRotate::EulerRotate(float pitch, float yaw, float rotate)
+EulerRotate::EulerRotate(float pitch, float yaw, float roll)
     : pitch(pitch), yaw(yaw), roll(roll){};
 
 glm::mat4 EulerRotate::getRotateMat() {
