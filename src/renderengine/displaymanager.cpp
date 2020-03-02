@@ -1,10 +1,20 @@
 
-#include "DisplayManager.h"
-#include <GLFW/glfw3.h>
+#include "displaymanager.h"
 #include <iostream>
 
 DisplayManager::DisplayManager(int w, int h, std::string name)
     : width(w), height(h), name(name){};
+
+bool DisplayManager::create() {
+  window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
+  if (window == NULL) {
+    std::cout << "Failed to create GLFW window" << std::endl;
+    glfwTerminate();
+    return false;
+  }
+  glfwMakeContextCurrent(window);
+  return true;
+}
 
 void DisplayManager::init() {
   /**
@@ -20,32 +30,10 @@ void DisplayManager::init() {
   // smaller subset of OpenGL features without backwards-compatible features we
   // no longer need
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #ifdef __APPLE__
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-}
-
-bool DisplayManager::create() {
-  window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
-  if (window == NULL) {
-    std::cout << "Failed to create GLFW window" << std::endl;
-    glfwTerminate();
-    return false;
-  }
-  glfwMakeContextCurrent(window);
-  //  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  return true;
-}
-
-void DisplayManager::processInput() {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
-    glfwSetWindowShouldClose(window, true);
-  }
-}
-
-void DisplayManager::framebuffer_size_callback(GLFWwindow *window, int width,
-                                               int height) {
-  //  glViewport(0, 0, width, height);
 }
 
 bool DisplayManager::shouldClose() { return glfwWindowShouldClose(window); }
@@ -57,3 +45,5 @@ void DisplayManager::afterward() {
 }
 
 void DisplayManager::destroy() { glfwDestroyWindow(window); }
+
+GLFWwindow *DisplayManager::getWindow() const { return window; }

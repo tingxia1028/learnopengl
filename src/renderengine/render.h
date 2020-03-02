@@ -2,11 +2,12 @@
 #ifndef OPENGL_RENDER_H
 #define OPENGL_RENDER_H
 
-#include "../model/rawmodel.h"
+#include "../model/Scene.h"
+#include "shader.h"
 class Render {
 public:
   void prepare();
-  void render(RawModel rawModel);
+  void render(Scene &scene, ShaderProgram &shaderProgram);
 };
 
 #endif // OPENGL_RENDER_H

@@ -3,6 +3,7 @@
 #include "GLFW/glfw3.h"
 #include "glad/glad.h"
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <sstream>
 
@@ -11,15 +12,15 @@ ShaderInfo::ShaderInfo(GLenum sType, std::string fPath) {
   filePath = fPath;
 }
 
-ShaderProgram::ShaderProgram(ShaderInfo *shaders, const int size)
-    : shaders(shaders), size(size){};
+ShaderProgram::ShaderProgram(std::vector<ShaderInfo> &shaders)
+    : shaders(shaders){};
 
 void ShaderProgram::createProgram() {
   programID = glCreateProgram();
-  for (int i = 0; i < size; ++i) {
+  for (int i = 0; i < shaders.size(); ++i) {
     ShaderInfo shaderInfo = shaders[i];
 
-    const char *shaderCode;
+    const GLchar *shaderCode;
     std::ifstream shaderFile;
     shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
@@ -28,6 +29,7 @@ void ShaderProgram::createProgram() {
       std::stringstream shaderStream;
 
       shaderStream << shaderFile.rdbuf();
+      shaderStream << "\0";
       shaderFile.close();
 
       shaderCode = shaderStream.str().c_str();
@@ -44,13 +46,16 @@ void ShaderProgram::createProgram() {
     glAttachShader(programID, shader);
   }
 
+  std::cout << "shader:" << glGetError() << std::endl;
+
   glLinkProgram(programID);
+  checkCompileErrors(programID, NULL);
 }
 
 void ShaderProgram::use() { glUseProgram(programID); }
 
 void ShaderProgram::cleanUp() {
-  for (int i = 0; i < size; ++i) {
+  for (int i = 0; i < shaders.size(); ++i) {
     glDeleteShader(shaders[i].shaderID);
   }
 }
@@ -58,7 +63,7 @@ void ShaderProgram::cleanUp() {
 void ShaderProgram::checkCompileErrors(unsigned int shader, GLenum type) {
   GLint success;
   GLchar infoLog[1024];
-  if (NULL != type) {
+  if (type) {
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success) {
       glGetShaderInfoLog(shader, 1024, NULL, infoLog);
@@ -88,4 +93,9 @@ void ShaderProgram::uniformSet4Float(const std::string name, float r, float g,
 
 void ShaderProgram::uniformSet1Int(const std::string name, int value) {
   glUniform1i(glGetUniformLocation(programID, name.c_str()), value);
+}
+
+void ShaderProgram::uniformSetMat4(const std::string name, glm::mat4 &value) {
+  glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE,
+                     glm::value_ptr(value));
 }
