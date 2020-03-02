@@ -20,12 +20,14 @@ class Model {
 public:
   Model(std::vector<float> &vertices, int numOfVertices,
         std::vector<GLuint> &indices, std::vector<TextureData> &textureData,
-        std::vector<float> &textureCoords, Transformation transformation);
+        std::vector<float> &textureCoords, Transformation transformation,
+        std::vector<float> &normals);
   Model(){};
   // vertex
   std::vector<float> vertices;
   int numOfVertices;
   std::vector<GLuint> indices;
+  std::vector<float> normals;
 
   // texture
   std::vector<TextureData> textures;

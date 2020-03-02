@@ -75,6 +75,7 @@ int main() {
   std::vector<GLuint> indices;
   TextureData textureData = TextureData("../resources/textures/container2.png");
   int numOfVertices = 36;
+  std::vector<float> normals;
 
   /**
    * load vao
@@ -83,10 +84,9 @@ int main() {
   textures.push_back(textureData);
   std::vector<Model> models;
   Transformation transformation = Transformation(
-      glm::vec3(-0.75f, -0.75f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), nullptr);
+      glm::vec3(-0.75f, -0.75f, 0.0f), glm::vec3(0.4f, 0.4f, 0.4f), nullptr);
   models.push_back(Model(vertices, numOfVertices, indices, textures,
-                         textureCoords, transformation));
-
+                         textureCoords, transformation, normals));
   Scene scene = Scene(models, &camera);
   VAOLoader vaoLoader = VAOLoader(&scene);
   vaoLoader.load();
@@ -100,12 +100,36 @@ int main() {
   /**
    * load shaders
    */
-  std::vector<ShaderInfo> shaders = {
+  // model shader
+  std::vector<ShaderInfo> modelShaders = {
       {GL_VERTEX_SHADER, "../src/shaders/vertex.shader"},
       {GL_FRAGMENT_SHADER, "../src/shaders/fragment.shader"}};
-  ShaderProgram shaderProgram = ShaderProgram(shaders);
-  shaderProgram.createProgram();
-  shaderProgram.use();
+  ShaderProgram modelShader = ShaderProgram(modelShaders);
+  modelShader.createProgram();
+
+  /**
+   * light cube
+   */
+  std::vector<Model> lightModels;
+  Transformation lightTrans = Transformation(glm::vec3(0.25, 0.25, 0.0f),
+                                             glm::vec3(0.2, 0.2, 0.2), nullptr);
+  std::vector<TextureData> lightTextures;
+  std::vector<float> lightTexCoords;
+  std::vector<GLuint> lightIndices;
+  std::vector<float> lightNormals;
+  lightModels.push_back(Model(vertices, numOfVertices, lightIndices,
+                              lightTextures, lightTexCoords, lightTrans,
+                              lightNormals));
+  Scene lightScene = Scene(lightModels, &camera);
+  VAOLoader lightLoader = VAOLoader(&lightScene);
+  lightLoader.load();
+
+  // light shaders
+  std::vector<ShaderInfo> lightShaders = {
+      {GL_VERTEX_SHADER, "../src/shaders/lightVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/lightFrag.shader"}};
+  ShaderProgram lightShader = ShaderProgram(lightShaders);
+  lightShader.createProgram();
 
   float deltaTime = 0.0f;
   float lastFrame = 0.0f;
@@ -125,7 +149,12 @@ int main() {
     processInput(displayManager.getWindow(), deltaTime);
 
     render.prepare();
-    render.render(scene, shaderProgram);
+
+    modelShader.use();
+    render.render(scene, modelShader);
+
+    lightShader.use();
+    render.render(lightScene, lightShader);
 
     displayManager.afterward();
     // poll IO events, eg. mouse moved etc.
@@ -133,8 +162,10 @@ int main() {
   }
 
   vaoLoader.cleanup();
+  lightLoader.cleanup();
   textureLoader.cleanup();
-  shaderProgram.cleanUp();
+  modelShader.cleanUp();
+  lightShader.cleanUp();
   displayManager.destroy();
   glfwTerminate();
 
