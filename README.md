@@ -10,7 +10,8 @@
 - shaders and basic glsl
 <img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/first_practice_triangles.png" alt="triangles" width="300" height="200" />
 
-### texture: AbstractLoader.class - > TextureLoader.class
+### texture
+AbstractLoader.class - > TextureLoader.class
 - texture coordinates
 - swapping and filtering
 - mipmap
