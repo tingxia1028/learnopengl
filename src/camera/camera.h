@@ -27,6 +27,7 @@ public:
   void processMouseScroll(float yOffset);
   glm::mat4 getViewMatrix();
   glm::mat4 getProjectionMatrix();
+  const glm::vec3 &getPosition() const;
 
 private:
   // camera outside attributes

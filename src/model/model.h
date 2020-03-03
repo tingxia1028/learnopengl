@@ -2,6 +2,7 @@
 #ifndef OPENGL_MODEL_H
 #define OPENGL_MODEL_H
 
+#include "../material/material.h"
 #include "../transformation/rotate.h"
 #include "../transformation/transformation.h"
 #include <glad/glad.h>
@@ -9,19 +10,12 @@
 #include <string>
 #include <vector>
 
-struct TextureData {
-  std::string texturePath;
-  GLuint textureID = 0;
-  TextureData(std::string texturePath) : texturePath(texturePath){};
-  TextureData(){};
-};
-
 class Model {
 public:
   Model(std::vector<float> &vertices, int numOfVertices,
-        std::vector<GLuint> &indices, std::vector<TextureData> &textureData,
-        std::vector<float> &textureCoords, Transformation transformation,
-        std::vector<float> &normals);
+        std::vector<GLuint> &indices, std::vector<float> &textureCoords,
+        Transformation transformation, std::vector<float> &normals,
+        std::vector<Material> &materials);
   Model(){};
   // vertex
   std::vector<float> vertices;
@@ -29,8 +23,8 @@ public:
   std::vector<GLuint> indices;
   std::vector<float> normals;
 
-  // texture
-  std::vector<TextureData> textures;
+  // materials
+  std::vector<Material> materials;
   std::vector<float> textureCoords;
 
   // transformation

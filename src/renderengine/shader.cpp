@@ -20,7 +20,7 @@ void ShaderProgram::createProgram() {
   for (int i = 0; i < shaders.size(); ++i) {
     ShaderInfo shaderInfo = shaders[i];
 
-    const GLchar *shaderCode;
+    std::string shaderStr;
     std::ifstream shaderFile;
     shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
@@ -32,13 +32,14 @@ void ShaderProgram::createProgram() {
       shaderStream << "\0";
       shaderFile.close();
 
-      shaderCode = shaderStream.str().c_str();
+      shaderStr = shaderStream.str();
     } catch (std::ifstream::failure e) {
       std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
     }
 
     GLuint shader = glCreateShader(shaderInfo.shaderType);
     shaderInfo.shaderID = shader;
+    const GLchar *shaderCode = shaderStr.c_str();
     glShaderSource(shader, 1, &shaderCode, NULL);
     glCompileShader(shader);
     checkCompileErrors(shader, shaderInfo.shaderType);
@@ -86,13 +87,17 @@ void ShaderProgram::checkCompileErrors(unsigned int shader, GLenum type) {
   }
 }
 
-void ShaderProgram::uniformSet4Float(const std::string name, float r, float g,
-                                     float b, float alpha) {
-  glUniform4f(glGetUniformLocation(programID, name.c_str()), r, g, b, alpha);
+void ShaderProgram::uniformSetVec3F(const std::string name, glm::vec3 value) {
+  glUniform3f(glGetUniformLocation(programID, name.c_str()), value.x, value.y,
+              value.z);
 }
 
-void ShaderProgram::uniformSet1Int(const std::string name, int value) {
+void ShaderProgram::uniformSetInt(const std::string name, int value) {
   glUniform1i(glGetUniformLocation(programID, name.c_str()), value);
+}
+
+void ShaderProgram::uniformSetFloat(const std::string name, float value) {
+  glUniform1f(glGetUniformLocation(programID, name.c_str()), value);
 }
 
 void ShaderProgram::uniformSetMat4(const std::string name, glm::mat4 &value) {

@@ -22,9 +22,9 @@ public:
   void use();
   void cleanUp();
   // set uniform values
-  void uniformSet4Float(const std::string name, float r, float g, float b,
-                        float alpha);
-  void uniformSet1Int(const std::string name, int value);
+  void uniformSetVec3F(const std::string name, glm::vec3 value);
+  void uniformSetInt(const std::string name, int value);
+  void uniformSetFloat(const std::string name, float value);
   void uniformSetMat4(const std::string name, glm::mat4 &value);
 
 private:

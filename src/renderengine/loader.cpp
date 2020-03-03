@@ -11,11 +11,17 @@
 VAOLoader::VAOLoader(Scene *scene) : AbstractLoader(scene){};
 
 void VAOLoader::cleanup() {
-  glDeleteVertexArrays(vaos.size(), &vaos.front());
+  if (vaos.size() > 0) {
+    glDeleteVertexArrays(vaos.size(), &vaos.front());
+  }
   vaos.clear();
-  glDeleteBuffers(vbos.size(), &vbos.front());
+  if (vbos.size() > 0) {
+    glDeleteBuffers(vbos.size(), &vbos.front());
+  }
   vbos.clear();
-  glDeleteBuffers(ebos.size(), &ebos.front());
+  if (ebos.size() > 0) {
+    glDeleteBuffers(ebos.size(), &ebos.front());
+  }
   ebos.clear();
 }
 
@@ -31,6 +37,7 @@ void VAOLoader::storeData() {
   std::vector<float> vertices;
   std::vector<GLuint> indices;
   std::vector<float> textureCoords;
+  std::vector<float> normals;
   for (int i = 0; i < (*scene).models.size(); ++i) {
     Model model = (*scene).models[i];
     vertices.insert(vertices.end(), model.vertices.begin(),
@@ -40,6 +47,7 @@ void VAOLoader::storeData() {
     }
     textureCoords.insert(textureCoords.end(), model.textureCoords.begin(),
                          model.textureCoords.end());
+    normals.insert(normals.end(), model.normals.begin(), model.normals.end());
   }
 
   GLuint VBO;
@@ -47,12 +55,16 @@ void VAOLoader::storeData() {
   vbos.push_back(VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER,
-               (vertices.size() + textureCoords.size()) * sizeof(float),
+               (vertices.size() + textureCoords.size() + normals.size()) *
+                   sizeof(float),
                nullptr, GL_STATIC_DRAW);
   glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float),
                   &vertices[0]);
   glBufferSubData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
                   textureCoords.size() * sizeof(float), &textureCoords[0]);
+  glBufferSubData(GL_ARRAY_BUFFER,
+                  (vertices.size() + textureCoords.size()) * sizeof(float),
+                  normals.size() * sizeof(float), &normals[0]);
 
   //   VEO
   if (!indices.empty()) {
@@ -70,6 +82,9 @@ void VAOLoader::storeData() {
                         (void *)0);
   glVertexAttribPointer(++vaoMaxIndex, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
                         (void *)(vertices.size() * sizeof(float)));
+  glVertexAttribPointer(
+      ++vaoMaxIndex, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+      (void *)((vertices.size() + textureCoords.size()) * sizeof(float)));
   (*scene).maxVaoIndex = vaoMaxIndex + 1;
 }
 
@@ -84,11 +99,14 @@ TextureLoader::TextureLoader(Scene *scene) : AbstractLoader(scene){};
 void TextureLoader::load() {
   for (int i = 0; i < (*scene).models.size(); ++i) {
     Model *currentModel = &(*scene).models[i];
-    for (int i = 0; i < (*currentModel).textures.size(); ++i) {
-      textureData = &(*currentModel).textures[i];
-      create();
-      storeData();
-      unbind();
+    for (int i = 0; i < (*currentModel).materials.size(); ++i) {
+      Material &material = (*currentModel).materials[i];
+      for (int j = 0; j < material.textures.size(); ++j) {
+        textureData = &material.textures[i];
+        create();
+        storeData();
+        unbind();
+      }
     }
   }
 }
@@ -128,6 +146,8 @@ void TextureLoader::storeData() {
 void TextureLoader::unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
 
 void TextureLoader::cleanup() {
-  glDeleteTextures(textures.size(), &textures.front());
+  if (textures.size() > 0) {
+    glDeleteTextures(textures.size(), &textures.front());
+  }
   textures.clear();
 }

@@ -72,22 +72,50 @@ int main() {
       1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
       0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
       0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+  std::vector<float> normals = {
+      0.0f,  0.0f, -1.0f, 0.0f,  0.0f, -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f, 0.0f,
+      -1.0f, 0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,  -1.0f, 0.0f,  0.0f,  1.0f, 0.0f,
+      0.0f,  1.0f, 0.0f,  0.0f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+      0.0f,  0.0f, 1.0f,  1.0f,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+      0.0f,  1.0f, 0.0f,  0.0f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+      0.0f,  0.0f, 1.0f,  0.0f,  0.0f, 1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
+      1.0f,  0.0f, 0.0f,  1.0f,  0.0f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f, -1.0f,
+      0.0f,  0.0f, -1.0f, 0.0f,  0.0f, -1.0f, 0.0f,  0.0f,  -1.0f, 0.0f, 0.0f,
+      -1.0f, 0.0f, 0.0f,  1.0f,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+      0.0f,  1.0f, 0.0f,  0.0f,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f};
   std::vector<GLuint> indices;
-  TextureData textureData = TextureData("../resources/textures/container2.png");
   int numOfVertices = 36;
-  std::vector<float> normals;
+
+  /**
+   * scene
+   */
+  std::vector<Model> models;
+  ArbitraryAxisRotate rotate(glm::vec3(1.0f, 1.0f, 1.0f), 45.0f);
+  Transformation transformation = Transformation(
+      glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.4f, 0.4f, 0.4f), &rotate);
+  std::vector<Material> materials;
+  TextureData diffuseTex{"../resources/textures/container_diffuse.png",
+                         TextureType::DIFFUSE};
+  TextureData specularTex{"../resources/textures/container_specular.png",
+                          TextureType::SPECULAR};
+  materials.push_back(Material(glm::vec3(1.0f, 0.5f, 0.31f),
+                               glm::vec3(0.5f, 0.5f, 0.5f), 32.0f, diffuseTex,
+                               specularTex));
+  models.push_back(Model(vertices, numOfVertices, indices, textureCoords,
+                         transformation, normals, materials));
+
+  std::vector<Light> lights;
+  glm::vec3 lightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
+  glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+  glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+  glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+  lights.push_back(Light(lightColor, lightPosition, ambientColor, diffuseColor,
+                         glm::vec3(1.0f, 1.0f, 1.0f)));
+  Scene scene = Scene(models, &camera, lights);
 
   /**
    * load vao
    */
-  std::vector<TextureData> textures;
-  textures.push_back(textureData);
-  std::vector<Model> models;
-  Transformation transformation = Transformation(
-      glm::vec3(-0.75f, -0.75f, 0.0f), glm::vec3(0.4f, 0.4f, 0.4f), nullptr);
-  models.push_back(Model(vertices, numOfVertices, indices, textures,
-                         textureCoords, transformation, normals));
-  Scene scene = Scene(models, &camera);
   VAOLoader vaoLoader = VAOLoader(&scene);
   vaoLoader.load();
 
@@ -111,16 +139,18 @@ int main() {
    * light cube
    */
   std::vector<Model> lightModels;
-  Transformation lightTrans = Transformation(glm::vec3(0.25, 0.25, 0.0f),
-                                             glm::vec3(0.2, 0.2, 0.2), nullptr);
+  Transformation lightTrans =
+      Transformation(lightPosition, glm::vec3(0.2, 0.2, 0.2), nullptr);
   std::vector<TextureData> lightTextures;
   std::vector<float> lightTexCoords;
   std::vector<GLuint> lightIndices;
   std::vector<float> lightNormals;
+  std::vector<Material> lightMaterials;
   lightModels.push_back(Model(vertices, numOfVertices, lightIndices,
-                              lightTextures, lightTexCoords, lightTrans,
-                              lightNormals));
-  Scene lightScene = Scene(lightModels, &camera);
+                              lightTexCoords, lightTrans, lightNormals,
+                              lightMaterials));
+  std::vector<Light> lightLights;
+  Scene lightScene = Scene(lightModels, &camera, lightLights);
   VAOLoader lightLoader = VAOLoader(&lightScene);
   lightLoader.load();
 
@@ -139,7 +169,6 @@ int main() {
    */
   Render render = Render();
   while (!displayManager.shouldClose()) {
-
     // per-frame time logic
     // --------------------
     float currentFrame = glfwGetTime();

@@ -9,6 +9,17 @@ public:
   virtual glm::mat4 getRotateMat() { return glm::mat4(1.0f); };
 };
 
+class EulerRotate : Rotate {
+public:
+  EulerRotate(float pitch, float yaw, float roll);
+  glm::mat4 getRotateMat();
+
+private:
+  float pitch;
+  float yaw;
+  float roll;
+};
+
 class ArbitraryAxisRotate : public Rotate {
 public:
   ArbitraryAxisRotate(const glm::vec3 &unitAxis, float rotateDegree);
@@ -19,17 +30,6 @@ private:
 
 private:
   float rotateDegree;
-};
-
-class EulerRotate : Rotate {
-public:
-  EulerRotate(float pitch, float yaw, float roll);
-  glm::mat4 getRotateMat();
-
-private:
-  float pitch;
-  float yaw;
-  float roll;
 };
 
 #endif // OPENGL_ROTATE_H
