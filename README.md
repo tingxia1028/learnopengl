@@ -49,8 +49,7 @@ AbstractLoader.class - > TextureLoader.class
        - height
 <img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/transformation.png" alt="transformation" width="300" height="200" />
 
-##more real walk
-###light
+### light
 - colors
   color of an object: the amount of each color component it reflects from a light source
 - light :  light.h
