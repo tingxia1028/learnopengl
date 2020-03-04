@@ -75,3 +75,4 @@ void Camera::updateCameraData() {
   up = glm::normalize(glm::cross(right, front));
 }
 const glm::vec3 &Camera::getPosition() const { return position; }
+const glm::vec3 &Camera::getFront() const { return front; }

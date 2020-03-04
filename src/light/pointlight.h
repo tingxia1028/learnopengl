@@ -6,7 +6,11 @@
 #include <glm/vec3.hpp>
 class PointLight : public Light {
 public:
-  glm::vec3 location;
+  PointLight(const glm::vec3 &ambient, const glm::vec3 &diffuse,
+             const glm::vec3 &specular, const LightType lightType,
+             const glm::vec3 &position, float constTerm, float linearTerm,
+             float quadraticTerm);
+  glm::vec3 position;
   float constTerm;
   float linearTerm;
   float quadraticTerm;

@@ -28,6 +28,7 @@ public:
   glm::mat4 getViewMatrix();
   glm::mat4 getProjectionMatrix();
   const glm::vec3 &getPosition() const;
+  const glm::vec3 &getFront() const;
 
 private:
   // camera outside attributes

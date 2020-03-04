@@ -3,6 +3,12 @@
 #define OPENGL_DIRECTIONALLIGHT_H
 
 #include "light.h"
-class DirectionalLight : public Light {};
+class DirectionalLight : public Light {
+public:
+  DirectionalLight(const glm::vec3 &ambient, const glm::vec3 &diffuse,
+                   const glm::vec3 &specular, const LightType lightType,
+                   const glm::vec3 &direction);
+  glm::vec3 direction;
+};
 
 #endif // OPENGL_DIRECTIONALLIGHT_H

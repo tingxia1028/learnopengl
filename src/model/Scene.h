@@ -12,8 +12,9 @@ public:
   int maxVaoIndex;
   std::vector<Model> models;
   Camera *camera;
-  std::vector<Light> lights;
-  Scene(std::vector<Model> &models, Camera *camera, std::vector<Light> &lights);
+  std::vector<Light *> lights;
+  Scene(std::vector<Model> &models, Camera *camera,
+        std::vector<Light *> &lights);
 };
 
 #endif // OPENGL_SCENE_H
