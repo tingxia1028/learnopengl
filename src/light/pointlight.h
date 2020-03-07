@@ -10,6 +10,9 @@ public:
              const glm::vec3 &specular, const LightType lightType,
              const glm::vec3 &position, float constTerm, float linearTerm,
              float quadraticTerm);
+  void draw(ShaderProgram &shaderProgram, std::string lightType,
+            std::string index) override;
+
   glm::vec3 position;
   float constTerm;
   float linearTerm;

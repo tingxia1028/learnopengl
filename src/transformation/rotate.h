@@ -26,10 +26,8 @@ public:
   glm::mat4 getRotateMat();
 
 private:
-  glm::vec3 unitAxis;
-
-private:
-  float rotateDegree;
+  const glm::vec3 unitAxis;
+  const float rotateDegree;
 };
 
 #endif // OPENGL_ROTATE_H

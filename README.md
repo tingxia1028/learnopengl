@@ -91,3 +91,30 @@ AbstractLoader.class - > TextureLoader.class
    - duplicated calculation
     eg. reflect vector, diffuse and specular terms, and sampling the material textures  
 <img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/light.png" alt="light" width="300" height="200" />
+
+### model loading
+- model file format
+  - obj 
+    - .obj
+    - .mtl
+- assimp
+   scene (meshes, materials) -> node (meshIndices) -> mesh(vertices, normals, texCoords, materialIndex)
+- scene -> model -> mesh 
+	- mesh : mesh.h
+	   - vertex
+	   - texture : material.h  
+	      add diffuseColor, specularColor to use if texture does not exist
+	   - change from render.class to render all models 
+		     render(Scene &scene, ShaderProgram &shaderProgram) 
+		     to 
+		     each model.class has draw(ShaderProgram &shaderProgram) function
+		     (same with light.h)
+	- model :  model.h
+       - meshes
+    - scene : scene.h
+        - models
+        - camera
+        - lights
+- optimization
+	 - load texture only once
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/modelloading.png" alt="modelloading" width="300" height="200" />

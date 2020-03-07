@@ -8,7 +8,7 @@
 // default camera attribute
 const float ANGLEXZ = -90.f;
 const float ANGLEXY = 0.0f;
-const float SPEED = 2.5f;
+const float SPEED = 1.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 
@@ -16,6 +16,8 @@ enum CameraMovement { FORWARD, BACKWARD, LEFT, RIGHT };
 
 class Camera {
 public:
+  Camera() = default;
+  ~Camera() = default;
   Camera(const glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f),
          const glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f),
          const float angleXZ = ANGLEXZ, float angleXY = ANGLEXY,

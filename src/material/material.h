@@ -4,10 +4,11 @@
 
 #include <glad/glad.h>
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <string>
 #include <vector>
 
-enum TextureType { DIFFUSE, SPECULAR };
+enum TextureType { DIFFUSE, SPECULAR, NORMAL, HEIGHT };
 
 static std::string TexTypeToString(TextureType type) {
   std::string table[] = {"diffuse", "specular"};
@@ -17,21 +18,21 @@ static std::string TexTypeToString(TextureType type) {
 struct TextureData {
   std::string texturePath;
   TextureType type;
-  TextureData(){};
-  TextureData(const std::string &texturePath, TextureType type);
   GLuint textureID = 0;
 };
 
 class Material {
 public:
+  Material() = default;
+  ~Material() = default;
   Material(const glm::vec3 &diffuse, const glm::vec3 &specular, float shininess,
-           TextureData &diffuseTex, TextureData &specularTex);
+           const std::vector<TextureData> &textures);
   glm::vec3 diffuse;
   glm::vec3 specular;
   float shininess;
-  TextureData diffuseTex;
-  TextureData specularTex;
   std::vector<TextureData> textures;
+  bool hasDiffuseTex = false;
+  bool hasSpecularTex = false;
 };
 
 #endif // OPENGL_MATERIAL_H
