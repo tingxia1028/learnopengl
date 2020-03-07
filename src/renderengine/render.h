@@ -2,7 +2,7 @@
 #ifndef OPENGL_RENDER_H
 #define OPENGL_RENDER_H
 
-#include "../model/Scene.h"
+#include "../scene/scene.h"
 #include "shader.h"
 class Render {
 public:

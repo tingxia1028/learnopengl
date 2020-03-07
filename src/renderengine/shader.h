@@ -26,6 +26,7 @@ public:
   void uniformSetInt(const std::string name, int value);
   void uniformSetFloat(const std::string name, float value);
   void uniformSetMat4(const std::string name, glm::mat4 &value);
+  void uniformSetBool(const std::string name, bool value);
 
 private:
   void checkCompileErrors(unsigned int shader, GLenum type);

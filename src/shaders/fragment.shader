@@ -36,9 +36,13 @@ struct SpotLight{
 };
 
 struct Material{
-    sampler2D diffuse;
-    sampler2D specular;
+    vec3 diffuseColor;
+    vec3 specularColor;
     float shininess;
+    bool hasDiffuseTex;
+    bool hasSpecularTex;
+    sampler2D diffuse;
+//    sampler2D specular;
 };
 
 #define DIRCECT_LIGHTS 5
@@ -64,8 +68,19 @@ void main()
     vec3 resultColor = vec3(0.0f);
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 diffuseSampler = vec3(texture(materials[0].diffuse, TexCoords));
-    vec3 specularSampler = vec3(texture(materials[0].specular, TexCoords));
+    vec3 diffuseSampler;
+    if(materials[0].hasDiffuseTex){
+        diffuseSampler = vec3(texture(materials[0].diffuse, TexCoords));
+    }else{
+        diffuseSampler = materials[0].diffuseColor;
+    }
+    vec3 specularSampler;
+//    if(materials[0].hasSpecularTex){
+//        specularSampler = vec3(texture(materials[0].specular, TexCoords));
+//    }else{
+        specularSampler = materials[0].specularColor;
+//    }
+
     for(int i = 0; i< dirNum; ++i){
         resultColor += CaculateDirectLight(directLights[i], Normal, viewDir, diffuseSampler, specularSampler);
     }

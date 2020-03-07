@@ -16,6 +16,8 @@ enum CameraMovement { FORWARD, BACKWARD, LEFT, RIGHT };
 
 class Camera {
 public:
+  Camera() = default;
+  ~Camera() = default;
   Camera(const glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f),
          const glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f),
          const float angleXZ = ANGLEXZ, float angleXY = ANGLEXY,

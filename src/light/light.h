@@ -2,6 +2,7 @@
 #ifndef OPENGL_LIGHT_H
 #define OPENGL_LIGHT_H
 
+#include "../renderengine/shader.h"
 #include <glm/vec3.hpp>
 #include <string>
 
@@ -16,6 +17,8 @@ class Light {
 public:
   Light(const glm::vec3 &ambient, const glm::vec3 &diffuse,
         const glm::vec3 &specular, const LightType lightType);
+  virtual void draw(ShaderProgram &shaderProgram, std::string lightType,
+                    std::string index);
 
   glm::vec3 ambient;
   glm::vec3 diffuse;

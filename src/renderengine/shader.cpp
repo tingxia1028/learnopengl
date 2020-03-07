@@ -17,7 +17,7 @@ ShaderProgram::ShaderProgram(std::vector<ShaderInfo> &shaders)
 
 void ShaderProgram::createProgram() {
   programID = glCreateProgram();
-  for (int i = 0; i < shaders.size(); ++i) {
+  for (unsigned int i = 0; i < shaders.size(); ++i) {
     ShaderInfo shaderInfo = shaders[i];
 
     std::string shaderStr;
@@ -56,7 +56,7 @@ void ShaderProgram::createProgram() {
 void ShaderProgram::use() { glUseProgram(programID); }
 
 void ShaderProgram::cleanUp() {
-  for (int i = 0; i < shaders.size(); ++i) {
+  for (unsigned int i = 0; i < shaders.size(); ++i) {
     glDeleteShader(shaders[i].shaderID);
   }
 }
@@ -103,4 +103,8 @@ void ShaderProgram::uniformSetFloat(const std::string name, float value) {
 void ShaderProgram::uniformSetMat4(const std::string name, glm::mat4 &value) {
   glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE,
                      glm::value_ptr(value));
+}
+
+void ShaderProgram::uniformSetBool(const std::string name, bool value) {
+  glUniform1i(glGetUniformLocation(programID, name.c_str()), value);
 }
