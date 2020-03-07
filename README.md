@@ -117,4 +117,4 @@ AbstractLoader.class - > TextureLoader.class
         - lights
 - optimization
 	 - load texture only once
-<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/modelloading.png" alt="modelloading" width="200" height="300" />
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/modelloading.png" alt="modelloading" width="260" height="300" />
