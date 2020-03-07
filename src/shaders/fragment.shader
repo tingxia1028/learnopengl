@@ -42,7 +42,7 @@ struct Material{
     bool hasDiffuseTex;
     bool hasSpecularTex;
     sampler2D diffuse;
-//    sampler2D specular;
+    sampler2D specular;
 };
 
 #define DIRCECT_LIGHTS 5
@@ -75,20 +75,20 @@ void main()
         diffuseSampler = materials[0].diffuseColor;
     }
     vec3 specularSampler;
-//    if(materials[0].hasSpecularTex){
-//        specularSampler = vec3(texture(materials[0].specular, TexCoords));
-//    }else{
+    if(materials[0].hasSpecularTex){
+        specularSampler = vec3(texture(materials[0].specular, TexCoords));
+    }else{
         specularSampler = materials[0].specularColor;
-//    }
+    }
 
     for(int i = 0; i< dirNum; ++i){
-        resultColor += CaculateDirectLight(directLights[i], Normal, viewDir, diffuseSampler, specularSampler);
+        resultColor += CaculateDirectLight(directLights[i], norm, viewDir, diffuseSampler, specularSampler);
     }
     for(int i = 0; i< pointNum; ++i){
-        resultColor += CaculatePointLight(pointLights[i], Normal, viewDir, diffuseSampler, specularSampler);
+        resultColor += CaculatePointLight(pointLights[i], norm, viewDir, diffuseSampler, specularSampler);
     }
     for(int i = 0; i< spotNum; ++i){
-        resultColor += CaculateSpotLight(spotLights[i], Normal, viewDir, diffuseSampler, specularSampler);
+        resultColor += CaculateSpotLight(spotLights[i], norm, viewDir, diffuseSampler, specularSampler);
     }
     FragColor = vec4(resultColor, 1.0f);
 }

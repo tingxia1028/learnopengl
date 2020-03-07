@@ -17,7 +17,7 @@ class Model {
 public:
   Model() = default;
   ~Model() = default;
-  Model(const std::string &path, const Transformation &transformation);
+  Model(const std::string &path, Transformation &transformation);
   void draw(ShaderProgram &shaderProgram);
 
   std::vector<Mesh> meshes;

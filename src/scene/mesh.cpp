@@ -11,41 +11,34 @@ Mesh::Mesh(std::string name, const std::vector<Vertex> &vertices,
 }
 
 void Mesh::draw(ShaderProgram &shaderProgram) {
+  glBindVertexArray(VAO);
   for (unsigned int i = 0; i < ATTRIBUTE_NUM; ++i) {
     glEnableVertexAttribArray(i);
   }
 
   // materials
-  //  for (unsigned int j = 0; j < materials.size(); ++j) {
-  //    std::string index = std::to_string(j);
-  //    Material material = materials[j];
-  //    //    shaderProgram.uniformSetFloat("materials[" + index +
-  //    "].shininess",
-  //    //                                  material.shininess);
-  //    //    shaderProgram.uniformSetVec3F("materials[" + index +
-  //    "].diffuseColor",
-  //    //                                  material.diffuse);
-  //    //    shaderProgram.uniformSetVec3F("materials[" + index +
-  //    //    "].specularColor",
-  //    //                                  material.specular);
-  //    //    shaderProgram.uniformSetBool("materials[" + index +
-  //    "].hasDiffuseTex",
-  //    //                                 material.hasDiffuseTex);
-  //    //    shaderProgram.uniformSetBool("materials[" + index +
-  //    //    "].hasSpecularTex",
-  //    //                                 material.hasSpecularTex);
-  //    for (unsigned int k = 0; k < material.textures.size(); ++k) {
-  //      TextureData textureData = material.textures[k];
-  //      //      shaderProgram.uniformSetInt(
-  //      //          "materials[" + index + "]." +
-  //      //          TexTypeToString(textureData.type), k);
-  //      //      shaderProgram.uniformSetInt("diffuse", k);
-  //      glActiveTexture(GL_TEXTURE0 + k);
-  //      glBindTexture(GL_TEXTURE_2D, textureData.textureID);
-  //    }
-  //  }
+  for (unsigned int j = 0; j < materials.size(); ++j) {
+    std::string index = std::to_string(j);
+    Material material = materials[j];
+    shaderProgram.uniformSetFloat("materials[" + index + "].shininess",
+                                  material.shininess);
+    shaderProgram.uniformSetVec3F("materials[" + index + "].diffuseColor",
+                                  material.diffuse);
+    shaderProgram.uniformSetVec3F("materials[" + index + "].specularColor",
+                                  material.specular);
+    shaderProgram.uniformSetBool("materials[" + index + "].hasDiffuseTex",
+                                 material.hasDiffuseTex);
+    shaderProgram.uniformSetBool("materials[" + index + "].hasSpecularTex",
+                                 material.hasSpecularTex);
+    for (unsigned int k = 0; k < material.textures.size(); ++k) {
+      glActiveTexture(GL_TEXTURE0 + k);
+      TextureData textureData = material.textures[k];
+      shaderProgram.uniformSetInt(
+          "materials[" + index + "]." + TexTypeToString(textureData.type), k);
+      glBindTexture(GL_TEXTURE_2D, textureData.textureID);
+    }
+  }
 
-  glBindVertexArray(VAO);
   if (!indices.empty()) {
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
   } else {

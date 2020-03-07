@@ -8,7 +8,7 @@
 // default camera attribute
 const float ANGLEXZ = -90.f;
 const float ANGLEXY = 0.0f;
-const float SPEED = 2.5f;
+const float SPEED = 1.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 

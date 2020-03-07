@@ -6,9 +6,10 @@
 #include <glm/vec3.hpp>
 class Transformation {
 public:
+  Transformation() = default;
+  ~Transformation() = default;
   Transformation(const glm::vec3 translation, const glm::vec3 scale,
                  Rotate *rotate);
-  Transformation(){};
   glm::mat4 getTransformationMat();
 
 private:

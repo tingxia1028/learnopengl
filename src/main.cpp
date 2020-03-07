@@ -58,34 +58,31 @@ int main() {
   std::vector<Model> models;
   Transformation transformation(glm::vec3(0.0f, -1.75f, 0.0f),
                                 glm::vec3(0.2f, 0.2f, 0.2f), nullptr);
-  Model model("../resources/Sponza-master/sponza.obj", transformation);
+  Model model("../resources/nanosuit/nanosuit.obj", transformation);
   models.push_back(model);
 
   // lights
   std::vector<Light *> lights;
-  glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-  glm::vec3 diffuseColor = lightColor * glm::vec3(0.8f);
-  glm::vec3 ambientColor = diffuseColor * glm::vec3(0.1f);
+  glm::vec3 ambientColor(0.2f, 0.2f, 0.2f);
+  glm::vec3 diffuseColor(0.9f, 0.9f, 0.9f);
   glm::vec3 specularColor(1.0f, 1.0f, 1.0f);
   DirectionalLight directionalLight(ambientColor, diffuseColor, specularColor,
                                     LightType ::DIRECT,
                                     glm::vec3(-0.2f, -1.0f, -0.3f));
   lights.push_back(&directionalLight);
+  DirectionalLight directionalLight1(ambientColor, diffuseColor, specularColor,
+                                     LightType ::DIRECT,
+                                     glm::vec3(0.2f, 1.0f, -0.3f));
+  lights.push_back(&directionalLight1);
   PointLight pointLight(ambientColor, diffuseColor, specularColor,
                         LightType ::POINT, glm::vec3(-0.25f, 1.0f, 0.0f), 1.0f,
                         0.09f, 0.032f);
   lights.push_back(&pointLight);
-  SpotLight spotLight(ambientColor, diffuseColor, specularColor,
-                      LightType ::SPOT, glm::vec3(-0.75f, 0.0f, 0.0f), 1.0f,
-                      0.09f, 0.032f, glm::vec3(1.0f, 0.0f, 0.0f),
-                      glm::cos(glm::radians(12.5f)),
-                      glm::cos(glm::radians(17.5f)));
-  lights.push_back(&spotLight);
-  FlashLight flashLight(ambientColor, diffuseColor, specularColor,
-                        LightType ::FLASH, 1.0f, 0.09f, 0.032f,
-                        glm::cos(glm::radians(12.5f)),
-                        glm::cos(glm::radians(17.5f)), &camera);
-  lights.push_back(&flashLight);
+  //  FlashLight flashLight(ambientColor, diffuseColor, specularColor,
+  //                        LightType ::FLASH, 1.0f, 0.09f, 0.032f,
+  //                        glm::cos(glm::radians(12.5f)),
+  //                        glm::cos(glm::radians(17.5f)), &camera);
+  //  lights.push_back(&flashLight);
 
   Scene scene = Scene(models, &camera, lights);
 
@@ -95,7 +92,7 @@ int main() {
   // model shader
   std::vector<ShaderInfo> modelShaders{
       {GL_VERTEX_SHADER, "../src/shaders/vertex.shader"},
-      {GL_FRAGMENT_SHADER, "../src/shaders/temp.shader"}};
+      {GL_FRAGMENT_SHADER, "../src/shaders/fragment.shader"}};
   ShaderProgram modelShader = ShaderProgram(modelShaders);
   modelShader.createProgram();
 
@@ -107,8 +104,6 @@ int main() {
    */
   Render render = Render();
   while (!displayManager.shouldClose()) {
-    // per-frame time logic
-    // --------------------
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;

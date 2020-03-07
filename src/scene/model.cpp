@@ -2,11 +2,11 @@
 #include "model.h"
 #include "../renderengine/stb_image.h"
 #include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <iostream>
-#include <postprocess.h>
 
-Model::Model(const std::string &path, const Transformation &transformation)
+Model::Model(const std::string &path, Transformation &transformation)
     : transformation(transformation) {
   loadModel(path);
 }
@@ -108,17 +108,25 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
   }
 
+  // 3. normal maps
+  std::vector<TextureData> normalMaps =
+      loadMaterialTextures(material, aiTextureType_HEIGHT, TextureType::NORMAL);
+
+  // 4. height maps
+  std::vector<TextureData> heightMaps = loadMaterialTextures(
+      material, aiTextureType_AMBIENT, TextureType::HEIGHT);
+
   aiColor3D color(0.0f, 0.0f, 0.0f);
 
-  // 3. diffuse_color
+  // 5. diffuse_color
   material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
   dstMaterial.diffuse = transformAIcolor(color);
 
-  // 4. specular color
+  // 6. specular color
   material->Get(AI_MATKEY_COLOR_SPECULAR, color);
   dstMaterial.specular = transformAIcolor(color);
 
-  // 5. shininess
+  // 7. shininess
   float shininess;
   material->Get(AI_MATKEY_SHININESS, shininess);
   dstMaterial.shininess = shininess;
@@ -201,7 +209,7 @@ glm::vec3 Model::transformAIcolor(aiColor3D aiColor3D) {
 
 void Model::draw(ShaderProgram &shaderProgram) {
   glm::mat4 modelTransform = transformation.getTransformationMat();
-  //    shaderProgram.uniformSetMat4("model", modelTransform);
+  shaderProgram.uniformSetMat4("model", modelTransform);
 
   for (unsigned int j = 0; j < meshes.size(); ++j) {
     meshes[j].draw(shaderProgram);

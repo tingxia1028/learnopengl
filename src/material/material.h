@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-enum TextureType { DIFFUSE, SPECULAR };
+enum TextureType { DIFFUSE, SPECULAR, NORMAL, HEIGHT };
 
 static std::string TexTypeToString(TextureType type) {
   std::string table[] = {"diffuse", "specular"};
