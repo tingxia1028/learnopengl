@@ -118,3 +118,77 @@ AbstractLoader.class - > TextureLoader.class
 - optimization
 	 - load texture only once
 <img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/modelloading.png" alt="modelloading" width="260" height="300" />
+
+## more real walk
+### depth testing
+- non-linear z value calculated (1/z)
+ z-value of the built-in gl_FragCoord vector in the fragment shader contains the depth value of that particular fragment
+- z-fighting
+  - small offset between near objects 
+    - glPolygonOffset
+  - set near plane far away
+  - larger precision of depth buffer
+  
+### stencil testing
+- stencil buffer
+- object outlining
+- more practical way to draw outline
+  - glPolygonOffset
+  - postprocessing
+
+### blend
+ - alpha
+ - sorted all transparent models with distance to camera
+   draw the furthest first and the nearest last
+ - order-independent-transparency
+
+### face culling
+- winding order
+
+### framebuffer
+- what is
+    - color buffer
+    - depth buffer
+    - stencil buffer
+    - render buffer  write-only
+- for what
+    freely access each of the pixels of the completely rendered scene as a single texture image
+
+### cubemaps
+- why use cubemaps
+  - the same as rendring a huge box filled in the camera space
+  - has 6 face textures for different direction
+  - first render models in the scene, then the skybox
+  - vertex color of models can be indexed/sampled using a direction vector
+- using framebuffer for dynamic environment maps
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/skybox.png" alt="skybox" width="300" height="200" />
+
+### advanced glsl
+- vertex shader
+    - gl_PointSize
+    - gl_VertexID
+- fragment shader
+    - gl_FragCoord
+    - gl_FrontFacing
+    - gl_FragDepth  can be wrote
+- interface blocks
+- uniform buffer objects : share between shaders
+   depend on index, offset
+
+### geometry shader
+takes as input a set of vertices that form a single primitive e.g. a point or a triangle.
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/geometryshader.png" alt="gs" width="260" height="300" />
+
+### instancing
+
+### anti-aliasing
+- why happened
+  continuous -> discrete
+- super sample anti-aliasing (SSAA)
+  hight resolution  -> down sampling
+- multisample anti-aliasing (MSAA)
+  per pixel multi subsamples -> determine the color of the pixel
+  - also use in depth test and stencil test
+  - offScreen MSAA
+  - custom anti-aliasing algorithm
+- FXAA, SMAA, TXAA

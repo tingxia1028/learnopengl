@@ -1,16 +1,17 @@
 
 #include "camera.h"
+#include <glad/glad.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 Camera::Camera(const glm::vec3 position, const glm::vec3 worldUp,
                const float angleXZ, float angleXY, float fov, float width,
                float height, float near, float far)
     : position(position), worldUp(worldUp), angleXZ(angleXZ), angleXY(angleXY),
-      front(glm::vec3(0.0f, 0.0f, -1.0f)), movementSpeed(SPEED),
-      mouseSensitivity(SENSITIVITY), fov(fov), width(width), height(height),
-      near(near), far(far) {
+      movementSpeed(SPEED), mouseSensitivity(SENSITIVITY), fov(fov),
+      width(width), height(height), near(near), far(far) {
   updateCameraData();
 }
 

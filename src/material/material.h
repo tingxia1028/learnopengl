@@ -30,6 +30,7 @@ public:
   glm::vec3 diffuse;
   glm::vec3 specular;
   float shininess;
+  float opacity;
   std::vector<TextureData> textures;
   bool hasDiffuseTex = false;
   bool hasSpecularTex = false;
