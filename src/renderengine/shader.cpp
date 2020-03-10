@@ -13,7 +13,9 @@ ShaderInfo::ShaderInfo(GLenum sType, std::string fPath) {
 }
 
 ShaderProgram::ShaderProgram(std::vector<ShaderInfo> &shaders)
-    : shaders(shaders){};
+    : shaders(shaders) {
+  createProgram();
+};
 
 void ShaderProgram::createProgram() {
   programID = glCreateProgram();
@@ -92,6 +94,11 @@ void ShaderProgram::uniformSetVec3F(const std::string name, glm::vec3 value) {
               value.z);
 }
 
+void ShaderProgram::uniformSetVec4F(const std::string name, glm::vec4 value) {
+  glUniform4f(glGetUniformLocation(programID, name.c_str()), value.x, value.y,
+              value.z, value.w);
+}
+
 void ShaderProgram::uniformSetInt(const std::string name, int value) {
   glUniform1i(glGetUniformLocation(programID, name.c_str()), value);
 }
@@ -107,4 +114,9 @@ void ShaderProgram::uniformSetMat4(const std::string name, glm::mat4 &value) {
 
 void ShaderProgram::uniformSetBool(const std::string name, bool value) {
   glUniform1i(glGetUniformLocation(programID, name.c_str()), value);
+}
+
+void ShaderProgram::bindUniformBlock(const std::string name, int value) {
+  glUniformBlockBinding(programID,
+                        glGetUniformBlockIndex(programID, name.c_str()), value);
 }

@@ -127,9 +127,13 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
   dstMaterial.specular = transformAIcolor(color);
 
   // 7. shininess
-  float shininess;
-  material->Get(AI_MATKEY_SHININESS, shininess);
-  dstMaterial.shininess = shininess;
+  float floatParam;
+  material->Get(AI_MATKEY_SHININESS, floatParam);
+  dstMaterial.shininess = floatParam;
+
+  // 8. opacity
+  material->Get(AI_MATKEY_OPACITY, floatParam);
+  dstMaterial.opacity = floatParam;
 
   // return a mesh object created from the extracted mesh data
   return Mesh(mesh->mName.C_Str(), vertices, indices,
@@ -157,6 +161,8 @@ std::vector<TextureData> Model::loadMaterialTextures(aiMaterial *mat,
       texture.texturePath = str.C_Str();
       textures.push_back(texture);
       loadedTextures[str.C_Str()] = texture;
+    } else {
+      textures.push_back(loadedTextures[str.C_Str()]);
     }
   }
   return textures;

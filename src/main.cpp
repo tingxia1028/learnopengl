@@ -12,12 +12,13 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 constexpr int SCR_WIDTH = 800;
 constexpr int SCR_HEIGHT = 600;
 
-Camera camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera = Camera(glm::vec3(-0.5f, -0.3f, 0.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -51,14 +52,20 @@ int main() {
    * gl global configuration
    */
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_STENCIL_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+  glEnable(GL_MULTISAMPLE);
 
   /**
    * scene
    */
   std::vector<Model> models;
-  Transformation transformation(glm::vec3(0.0f, -1.75f, 0.0f),
-                                glm::vec3(0.2f, 0.2f, 0.2f), nullptr);
-  Model model("../resources/nanosuit/nanosuit.obj", transformation);
+  Transformation transformation(glm::vec3(0.0f, -0.75f, 0.0f),
+                                glm::vec3(0.0002f, 0.0002f, 0.0002f), nullptr);
+  Model model("../resources/Sponza-master/sponza.obj", transformation);
   models.push_back(model);
 
   // lights
@@ -78,23 +85,43 @@ int main() {
                         LightType ::POINT, glm::vec3(-0.25f, 1.0f, 0.0f), 1.0f,
                         0.09f, 0.032f);
   lights.push_back(&pointLight);
-  //  FlashLight flashLight(ambientColor, diffuseColor, specularColor,
-  //                        LightType ::FLASH, 1.0f, 0.09f, 0.032f,
-  //                        glm::cos(glm::radians(12.5f)),
-  //                        glm::cos(glm::radians(17.5f)), &camera);
-  //  lights.push_back(&flashLight);
 
-  Scene scene = Scene(models, &camera, lights);
+  // skyBox
+  std::vector<std::string> skyTexs{
+      "../resources/skybox/right.jpg", "../resources/skybox/left.jpg",
+      "../resources/skybox/top.jpg",   "../resources/skybox/bottom.jpg",
+      "../resources/skybox/front.jpg", "../resources/skybox/back.jpg"};
+  SkyBox skyBox(skyTexs);
+
+  Scene scene = Scene(models, &camera, lights, &skyBox);
 
   /**
    * load shaders
    */
-  // model shader
+  // model shaders
   std::vector<ShaderInfo> modelShaders{
-      {GL_VERTEX_SHADER, "../src/shaders/vertex.shader"},
-      {GL_FRAGMENT_SHADER, "../src/shaders/fragment.shader"}};
+      {GL_VERTEX_SHADER, "../src/shaders/basic/vertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/basic/fragment.shader"}};
   ShaderProgram modelShader = ShaderProgram(modelShaders);
-  modelShader.createProgram();
+
+  // outline shaders
+  std::vector<ShaderInfo> outlineShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/lightVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/outlineFrag.shader"}};
+  ShaderProgram outlineShader = ShaderProgram(outlineShaders);
+
+  // skyBox shaders
+  std::vector<ShaderInfo> skyBoxShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/skybox/skyboxVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/skybox/skyboxFrag.shader"}};
+  ShaderProgram skyBoxShader = ShaderProgram(skyBoxShaders);
+
+  // normal shaders
+  std::vector<ShaderInfo> normalShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/normal/normalVertex.shader"},
+      {GL_GEOMETRY_SHADER, "../src/shaders/normal/normalGeometry.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/normal/normalFrag.shader"}};
+  ShaderProgram normalShader = ShaderProgram(normalShaders);
 
   float deltaTime = 0.0f;
   float lastFrame = 0.0f;
@@ -110,10 +137,16 @@ int main() {
 
     processInput(displayManager.getWindow(), deltaTime);
 
-    render.prepare();
+    render.prepare(camera);
 
     modelShader.use();
     render.render(scene, modelShader);
+
+    //    normalShader.use();
+    //    render.render(scene, normalShader);
+
+    skyBoxShader.use();
+    render.renderSkyBox(scene, skyBoxShader);
 
     displayManager.afterward();
     // poll IO events, eg. mouse moved etc.

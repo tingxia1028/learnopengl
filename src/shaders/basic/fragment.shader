@@ -1,9 +1,12 @@
 #version 330 core
 
 out vec4 FragColor;
-in vec3 Normal;
-in vec3 FragPos;
-in vec2 TexCoords;
+
+in VS_OUT{
+    vec3 Normal;
+    vec3 FragPos;
+    vec2 TexCoords;
+} fs_in;
 
 struct DirectLight{
     vec3 direction;
@@ -66,17 +69,21 @@ vec3 CaculateSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 diffuseS
 void main()
 {
     vec3 resultColor = vec3(0.0f);
-    vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 norm = normalize(fs_in.Normal);
+    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
     vec3 diffuseSampler;
     if(materials[0].hasDiffuseTex){
-        diffuseSampler = vec3(texture(materials[0].diffuse, TexCoords));
+        vec4 diffuseTex = texture(materials[0].diffuse, fs_in.TexCoords);
+        if(diffuseTex.a<0.5){
+            discard;
+        }
+        diffuseSampler = vec3(diffuseTex);
     }else{
         diffuseSampler = materials[0].diffuseColor;
     }
     vec3 specularSampler;
     if(materials[0].hasSpecularTex){
-        specularSampler = vec3(texture(materials[0].specular, TexCoords));
+        specularSampler = vec3(texture(materials[0].specular, fs_in.TexCoords));
     }else{
         specularSampler = materials[0].specularColor;
     }
@@ -108,7 +115,7 @@ vec3 CaculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir, vec3 diff
 }
 
 vec3 CaculatePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 diffuseSampler, vec3 specularSampler){
-    vec3 lightDir = normalize(light.position - FragPos);
+    vec3 lightDir = normalize(light.position - fs_in.FragPos);
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
@@ -119,7 +126,7 @@ vec3 CaculatePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 diffus
     vec3 diffuse = light.diffuse * diff * diffuseSampler;
     vec3 specular = light.specular * spec * specularSampler;
     // attenuation
-    float distance    = length(light.position - FragPos);
+    float distance    = length(light.position - fs_in.FragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
     ambient *= attenuation;
     diffuse *= attenuation;
@@ -128,7 +135,7 @@ vec3 CaculatePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 diffus
 }
 
 vec3 CaculateSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 diffuseSampler, vec3 specularSampler){
-    vec3 lightDir = normalize(light.position - FragPos);
+    vec3 lightDir = normalize(light.position - fs_in.FragPos);
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
@@ -139,7 +146,7 @@ vec3 CaculateSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 diffuseS
     vec3 diffuse = light.diffuse * diff * diffuseSampler;
     vec3 specular = light.specular * spec * specularSampler;
     // attenuation
-    float distance    = length(light.position - FragPos);
+    float distance    = length(light.position - fs_in.FragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
     // spotlight intensity
     float theta = dot(lightDir, normalize(-light.direction));

@@ -3,8 +3,8 @@
 #include "model.h"
 #include <map>
 Scene::Scene(std::vector<Model> &models, Camera *camera,
-             std::vector<Light *> &lights)
-    : models(models), camera(camera), lights(lights) {}
+             std::vector<Light *> &lights, SkyBox *skyBox)
+    : models(models), camera(camera), lights(lights), skyBox(skyBox) {}
 
 void Scene::cleanUp() {
   for (unsigned int i = 0; i < models.size(); ++i) {
