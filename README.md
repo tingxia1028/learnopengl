@@ -177,6 +177,7 @@ AbstractLoader.class - > TextureLoader.class
 
 ### geometry shader
 takes as input a set of vertices that form a single primitive e.g. a point or a triangle.
+
 <img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/geometryshader.png" alt="gs" width="260" height="300" />
 
 ### instancing
