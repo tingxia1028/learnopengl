@@ -32,7 +32,8 @@ private:
   std::vector<TextureData> loadMaterialTextures(aiMaterial *mat,
                                                 aiTextureType type,
                                                 TextureType typeName);
-  unsigned int TextureFromFile(const char *path, const std::string &directory);
+  unsigned int TextureFromFile(const char *path, const std::string &directory,
+                               bool isDiffuse);
   glm::vec3 transformAIcolor(aiColor3D aiColor3D);
 };
 

@@ -62,6 +62,8 @@ uniform SpotLight spotLights[SPOT_LIGHTS];
 uniform Material materials[MATERIALS];
 uniform vec3 viewPos;
 
+const float gamma = 2.2;
+
 vec3 CaculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir, vec3 diffuseSampler, vec3 specularSampler);
 vec3 CaculatePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 diffuseSampler, vec3 specularSampler);
 vec3 CaculateSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 diffuseSampler, vec3 specularSampler);
@@ -97,6 +99,8 @@ void main()
     for(int i = 0; i< spotNum; ++i){
         resultColor += CaculateSpotLight(spotLights[i], norm, viewDir, diffuseSampler, specularSampler);
     }
+
+    resultColor = pow(resultColor, vec3(1.0f/gamma));
     FragColor = vec4(resultColor, 1.0f);
 }
 
@@ -105,8 +109,8 @@ vec3 CaculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir, vec3 diff
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), materials[0].shininess);
+    vec3 halfDir = normalize(lightDir+viewDir);
+    float spec = pow(max(dot(halfDir, normal), 0.0), materials[0].shininess);
     // combine results
     vec3 ambient = light.ambient * diffuseSampler;
     vec3 diffuse = light.diffuse * diff * diffuseSampler;
@@ -119,8 +123,8 @@ vec3 CaculatePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 diffus
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), materials[0].shininess);
+    vec3 halfDir = normalize(lightDir+viewDir);
+    float spec = pow(max(dot(normal, halfDir), 0.0), materials[0].shininess);
     // combine results
     vec3 ambient = light.ambient * diffuseSampler;
     vec3 diffuse = light.diffuse * diff * diffuseSampler;
@@ -139,8 +143,8 @@ vec3 CaculateSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 diffuseS
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), materials[0].shininess);
+    vec3 halfDir = normalize(lightDir+viewDir);
+    float spec = pow(max(dot(normal, halfDir), 0.0), materials[0].shininess);
     // combine results
     vec3 ambient = light.ambient * diffuseSampler;
     vec3 diffuse = light.diffuse * diff * diffuseSampler;

@@ -156,7 +156,8 @@ std::vector<TextureData> Model::loadMaterialTextures(aiMaterial *mat,
     if (loadedTextures.count(str.C_Str()) <=
         0) { // if texture hasn't been loaded already, load it
       TextureData texture;
-      texture.textureID = TextureFromFile(str.C_Str(), this->directory);
+      texture.textureID =
+          TextureFromFile(str.C_Str(), this->directory, typeName == DIFFUSE);
       texture.type = typeName;
       texture.texturePath = str.C_Str();
       textures.push_back(texture);
@@ -169,7 +170,8 @@ std::vector<TextureData> Model::loadMaterialTextures(aiMaterial *mat,
 }
 
 unsigned int Model::TextureFromFile(const char *path,
-                                    const std::string &directory) {
+                                    const std::string &directory,
+                                    bool isDiffuse) {
   std::string filename = std::string(path);
   filename = directory + '/' + filename;
 
@@ -181,15 +183,19 @@ unsigned int Model::TextureFromFile(const char *path,
       stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
   if (data) {
     GLenum format;
+    GLenum internalFormat;
     if (nrComponents == 1)
       format = GL_RED;
-    else if (nrComponents == 3)
+    else if (nrComponents == 3) {
       format = GL_RGB;
-    else if (nrComponents == 4)
+      internalFormat = isDiffuse ? GL_SRGB : GL_RGB;
+    } else if (nrComponents == 4) {
       format = GL_RGBA;
+      internalFormat = isDiffuse ? GL_SRGB_ALPHA : GL_RGB;
+    }
 
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format,
                  GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
