@@ -19,7 +19,7 @@ public:
   Mesh(std::string name, const std::vector<Vertex> &vertices,
        const std::vector<unsigned int> &indices,
        const std::vector<Material> &materials);
-  void draw(ShaderProgram &shaderProgram);
+  void draw(ShaderProgram &shaderProgram, bool withMaterials, int lightsNum);
 
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
@@ -28,9 +28,11 @@ public:
   std::string name;
 
 private:
+  void loadData();
   void create();
   void storeData();
   void unbind();
+  void configureMaterials(ShaderProgram &shaderProgram, int lightsNum);
 };
 
 #endif // OPENGL_MESH_H

@@ -219,11 +219,12 @@ glm::vec3 Model::transformAIcolor(aiColor3D aiColor3D) {
   return glm::vec3(aiColor3D.r, aiColor3D.g, aiColor3D.b);
 }
 
-void Model::draw(ShaderProgram &shaderProgram) {
+void Model::draw(ShaderProgram &shaderProgram, int lightsNum,
+                 bool withMaterials) {
   glm::mat4 modelTransform = transformation.getTransformationMat();
   shaderProgram.uniformSetMat4("model", modelTransform);
 
   for (unsigned int j = 0; j < meshes.size(); ++j) {
-    meshes[j].draw(shaderProgram);
+    meshes[j].draw(shaderProgram, withMaterials, lightsNum);
   }
 }

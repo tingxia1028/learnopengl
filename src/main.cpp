@@ -12,36 +12,22 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
-constexpr int SCR_WIDTH = 800;
-constexpr int SCR_HEIGHT = 600;
-
-Camera camera = Camera(glm::vec3(-0.5f, -0.3f, 0.0f));
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void mouse_callback(GLFWwindow *window, double xoffset, double yoffset);
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window, float deltaTime);
+int SCR_WIDTH = 800;
+int SCR_HEIGHT = 600;
 
 int main() {
   /**
    * window
    */
+  Camera camera = Camera(glm::vec3(-0.5f, -0.3f, 0.0f));
   DisplayManager displayManager =
-      DisplayManager(SCR_WIDTH, SCR_HEIGHT, "xt screen");
+      DisplayManager(SCR_WIDTH, SCR_HEIGHT, "xt screen", &camera);
   displayManager.init();
   if (!displayManager.create()) {
     return -1;
   }
-  glfwSetFramebufferSizeCallback(displayManager.getWindow(),
-                                 framebuffer_size_callback);
-  glfwSetCursorPosCallback(displayManager.getWindow(), mouse_callback);
-  glfwSetScrollCallback(displayManager.getWindow(), scroll_callback);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -75,16 +61,17 @@ int main() {
   glm::vec3 specularColor(1.0f, 1.0f, 1.0f);
   DirectionalLight directionalLight(ambientColor, diffuseColor, specularColor,
                                     LightType ::DIRECT,
-                                    glm::vec3(-0.2f, -1.0f, -0.3f));
+                                    glm::vec3(4.0f, -8.0f, -3.0f));
   lights.push_back(&directionalLight);
-  DirectionalLight directionalLight1(ambientColor, diffuseColor, specularColor,
-                                     LightType ::DIRECT,
-                                     glm::vec3(0.2f, 1.0f, -0.3f));
-  lights.push_back(&directionalLight1);
-  PointLight pointLight(ambientColor, diffuseColor, specularColor,
-                        LightType ::POINT, glm::vec3(-0.25f, 1.0f, 0.0f), 1.0f,
-                        0.09f, 0.032f);
-  lights.push_back(&pointLight);
+  //  DirectionalLight directionalLight1(ambientColor, diffuseColor,
+  //  specularColor,
+  //                                     LightType ::DIRECT,
+  //                                     glm::vec3(0.2f, 1.0f, -0.3f));
+  //  lights.push_back(&directionalLight1);
+  //  PointLight pointLight(ambientColor, diffuseColor, specularColor,
+  //                        LightType ::POINT, glm::vec3(-0.25f, 1.0f,
+  //                        0.0f), 1.0f, 0.09f, 0.032f);
+  //  lights.push_back(&pointLight);
 
   // skyBox
   std::vector<std::string> skyTexs{
@@ -123,30 +110,46 @@ int main() {
       {GL_FRAGMENT_SHADER, "../src/shaders/normal/normalFrag.shader"}};
   ShaderProgram normalShader = ShaderProgram(normalShaders);
 
+  // shadow map shaders
+  std::vector<ShaderInfo> shadowShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/shadow/depthmapVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/shadow/depthmapFrag.shader"}};
+  ShaderProgram shadowShader = ShaderProgram(shadowShaders);
+
+  // debug shadow map shaders
+  std::vector<ShaderInfo> debugShadowShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/shadow/debugDepthVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/shadow/debugDepthFrag.shader"}};
+  ShaderProgram debugShadowShader = ShaderProgram(debugShadowShaders);
+
   float deltaTime = 0.0f;
   float lastFrame = 0.0f;
 
   /**
    * render loop
    */
-  Render render = Render();
   while (!displayManager.shouldClose()) {
-    float currentFrame = glfwGetTime();
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
 
-    processInput(displayManager.getWindow(), deltaTime);
+    displayManager.interactionCallback();
 
-    render.prepare(camera);
+    shadowShader.use();
+    Render::renderShadowMap(scene, shadowShader);
 
-    modelShader.use();
-    render.render(scene, modelShader);
+    Render::prepare(&camera, displayManager);
+    debugShadowShader.use();
+    modelShader.bindUniformBlock("Matrices", 0);
+    Render::debugRenderShadowMap(scene, debugShadowShader);
+
+    //    Render::prepare(&camera, displayManager);
+    //    modelShader.use();
+    //    modelShader.bindUniformBlock("Matrices", 0);
+    //    Render::render(scene, modelShader, true, true);
 
     //    normalShader.use();
-    //    render.render(scene, normalShader);
+    //    Render::render(scene, normalShader, false, false);
 
-    skyBoxShader.use();
-    render.renderSkyBox(scene, skyBoxShader);
+    //    skyBoxShader.use();
+    //    Render::renderSkyBox(scene, skyBoxShader);
 
     displayManager.afterward();
     // poll IO events, eg. mouse moved etc.
@@ -159,44 +162,4 @@ int main() {
   glfwTerminate();
 
   return 0;
-}
-
-void processInput(GLFWwindow *window, float deltaTime) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
-    glfwSetWindowShouldClose(window, true);
-  }
-
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    camera.processKeyboard(FORWARD, deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    camera.processKeyboard(BACKWARD, deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    camera.processKeyboard(LEFT, deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    camera.processKeyboard(RIGHT, deltaTime);
-}
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-  glViewport(0, 0, width, height);
-}
-
-void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
-  if (firstMouse) {
-    lastX = xpos;
-    lastY = ypos;
-    firstMouse = false;
-  }
-
-  float xoffset = xpos - lastX;
-  float yoffset =
-      lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-  lastX = xpos;
-  lastY = ypos;
-
-  camera.processMouseMovement(xoffset, yoffset);
-}
-
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-  camera.processMouseScroll(yoffset);
 }

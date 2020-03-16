@@ -4,13 +4,14 @@ FlashLight::FlashLight(const glm::vec3 &ambient, const glm::vec3 &diffuse,
                        const glm::vec3 &specular, const LightType lightType,
                        float constTerm, float linearTerm, float quadraticTerm,
                        float cutoffCos, float outCutoffCos, Camera *camera)
-    : Light(ambient, diffuse, specular, lightType), constTerm(constTerm),
-      linearTerm(linearTerm), quadraticTerm(quadraticTerm),
-      cutoffCos(cutoffCos), outCutoffCos(outCutoffCos), camera(camera) {}
+    : Light(camera->getPosition(), ambient, diffuse, specular, lightType),
+      constTerm(constTerm), linearTerm(linearTerm),
+      quadraticTerm(quadraticTerm), cutoffCos(cutoffCos),
+      outCutoffCos(outCutoffCos), camera(camera) {}
 
-void FlashLight::draw(ShaderProgram &shaderProgram, std::string lightType,
-                      std::string index) {
-  Light::draw(shaderProgram, lightType, index);
+void FlashLight::configure(ShaderProgram &shaderProgram, std::string lightType,
+                           std::string index, int depthMapIndex) {
+  Light::configure(shaderProgram, lightType, index, depthMapIndex);
   shaderProgram.uniformSetVec3F(lightType + "s[" + index + "].position",
                                 camera->getPosition());
   shaderProgram.uniformSetVec3F(lightType + "s[" + index + "].direction",

@@ -11,9 +11,9 @@ SpotLight::SpotLight(const glm::vec3 &ambient, const glm::vec3 &diffuse,
                  linearTerm, quadraticTerm),
       direction(direction), cutoffCos(cutoffCos), outCutoffCos(outCutoffCos) {}
 
-void SpotLight::draw(ShaderProgram &shaderProgram, std::string lightType,
-                     std::string index) {
-  PointLight::draw(shaderProgram, lightType, index);
+void SpotLight::configure(ShaderProgram &shaderProgram, std::string lightType,
+                          std::string index, int depthMapIndex) {
+  PointLight::configure(shaderProgram, lightType, index, depthMapIndex);
   shaderProgram.uniformSetVec3F(lightType + "s[" + index + "].direction",
                                 direction);
   shaderProgram.uniformSetFloat(lightType + "s[" + index + "].cutoff",

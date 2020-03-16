@@ -18,7 +18,8 @@ public:
   Model() = default;
   ~Model() = default;
   Model(const std::string &path, Transformation &transformation);
-  void draw(ShaderProgram &shaderProgram);
+  void draw(ShaderProgram &shaderProgram, int lightsNum,
+            bool withMaterials = false);
 
   std::vector<Mesh> meshes;
   Transformation transformation;

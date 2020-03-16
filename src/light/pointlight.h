@@ -10,10 +10,13 @@ public:
              const glm::vec3 &specular, const LightType lightType,
              const glm::vec3 &position, float constTerm, float linearTerm,
              float quadraticTerm);
-  void draw(ShaderProgram &shaderProgram, std::string lightType,
-            std::string index) override;
+  void configure(ShaderProgram &shaderProgram, std::string lightType,
+                 std::string index, int depthMapIndex) override;
 
-  glm::vec3 position;
+private:
+  void genShadowMap() override;
+
+public:
   float constTerm;
   float linearTerm;
   float quadraticTerm;

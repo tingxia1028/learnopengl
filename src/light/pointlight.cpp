@@ -4,13 +4,13 @@ PointLight::PointLight(const glm::vec3 &ambient, const glm::vec3 &diffuse,
                        const glm::vec3 &specular, const LightType lightType,
                        const glm::vec3 &position, float constTerm,
                        float linearTerm, float quadraticTerm)
-    : Light(ambient, diffuse, specular, lightType), position(position),
+    : Light(position, ambient, diffuse, specular, lightType),
       constTerm(constTerm), linearTerm(linearTerm),
       quadraticTerm(quadraticTerm) {}
 
-void PointLight::draw(ShaderProgram &shaderProgram, std::string lightType,
-                      std::string index) {
-  Light::draw(shaderProgram, lightType, index);
+void PointLight::configure(ShaderProgram &shaderProgram, std::string lightType,
+                           std::string index, int depthMapIndex) {
+  Light::configure(shaderProgram, lightType, index, depthMapIndex);
   shaderProgram.uniformSetFloat(lightType + "s[" + index + "].constant",
                                 constTerm);
   shaderProgram.uniformSetFloat(lightType + "s[" + index + "].linear",
@@ -20,3 +20,5 @@ void PointLight::draw(ShaderProgram &shaderProgram, std::string lightType,
   shaderProgram.uniformSetVec3F(lightType + "s[" + index + "].position",
                                 position);
 }
+
+void PointLight::genShadowMap() {}

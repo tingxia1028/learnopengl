@@ -10,8 +10,8 @@ public:
             const glm::vec3 &position, float constTerm, float linearTerm,
             float quadraticTerm, const glm::vec3 &direction, float cutoffCos,
             float outCutoffCos);
-  void draw(ShaderProgram &shaderProgram, std::string lightType,
-            std::string index) override;
+  void configure(ShaderProgram &shaderProgram, std::string lightType,
+                 std::string index, int depthMapIndex) override;
 
   glm::vec3 direction;
   float cutoffCos;

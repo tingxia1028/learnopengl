@@ -10,8 +10,8 @@ public:
              const glm::vec3 &specular, const LightType lightType,
              float constTerm, float linearTerm, float quadraticTerm,
              float cutoffCos, float outCutoffCos, Camera *camera);
-  void draw(ShaderProgram &shaderProgram, std::string lightType,
-            std::string index) override;
+  void configure(ShaderProgram &shaderProgram, std::string lightType,
+                 std::string index, int depthMapIndex) override;
 
   float constTerm;
   float linearTerm;

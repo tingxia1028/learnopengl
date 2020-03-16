@@ -4,6 +4,7 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexture;
 
 uniform mat4 model;
+uniform mat4 lightSpaceTrans;
 layout (std140) uniform Matrices
 {
     mat4 projection;

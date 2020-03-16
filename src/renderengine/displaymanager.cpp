@@ -1,9 +1,13 @@
 
 #include "displaymanager.h"
+#include "../utils/fileutils.h"
 #include <iostream>
 
-DisplayManager::DisplayManager(int w, int h, std::string name)
-    : width(w), height(h), name(name){};
+DisplayManager::DisplayManager(int w, int h, std::string name, Camera *camera)
+    : width(w), height(h), name(name), camera(camera) {
+  lastX = width / 2.0f;
+  lastY = height / 2.0f;
+};
 
 bool DisplayManager::create() {
   window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
@@ -48,4 +52,59 @@ void DisplayManager::afterward() {
 
 void DisplayManager::destroy() { glfwDestroyWindow(window); }
 
-GLFWwindow *DisplayManager::getWindow() const { return window; }
+void DisplayManager::interactionCallback() {
+  float currentFrame = glfwGetTime();
+  float deltaTime = currentFrame - lastFrame;
+  lastFrame = currentFrame;
+  processInput(window, deltaTime);
+  windowSizeCallback();
+  mouseCallback();
+}
+
+void DisplayManager::windowSizeCallback() {
+  glfwGetWindowSize(window, &width, &height);
+  glViewport(0, 0, 2 * width, 2 * height);
+}
+
+void DisplayManager::processInput(GLFWwindow *window, float deltaTime) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+    glfwSetWindowShouldClose(window, true);
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    camera->processKeyboard(FORWARD, deltaTime);
+  else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    camera->processKeyboard(BACKWARD, deltaTime);
+  else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    camera->processKeyboard(LEFT, deltaTime);
+  else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    camera->processKeyboard(RIGHT, deltaTime);
+  else if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+    GLint viewPort[4] = {0};
+    glGetIntegerv(GL_VIEWPORT, viewPort);
+    int arrLen = viewPort[2] * viewPort[3] * 3;
+    GLbyte *colorArr = new GLbyte[arrLen];
+    glReadPixels(viewPort[0], viewPort[1], viewPort[2], viewPort[3], GL_RGB,
+                 GL_UNSIGNED_BYTE, colorArr);
+    std::string outputFile("../output/temp.png");
+  }
+}
+
+void DisplayManager::mouseCallback() {
+  double xpos, ypos;
+  glfwGetCursorPos(window, &xpos, &ypos);
+  if (firstMouse) {
+    lastX = xpos;
+    lastY = ypos;
+    firstMouse = false;
+  }
+
+  float xoffset = xpos - lastX;
+  float yoffset =
+      lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+  lastX = xpos;
+  lastY = ypos;
+
+  camera->processMouseMovement(xoffset, yoffset);
+}
