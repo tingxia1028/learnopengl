@@ -1,6 +1,8 @@
 
 #include "directionallight.h"
 #include "../renderengine/render.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 DirectionalLight::DirectionalLight(const glm::vec3 &ambient,
                                    const glm::vec3 &diffuse,
                                    const glm::vec3 &specular,
@@ -8,9 +10,9 @@ DirectionalLight::DirectionalLight(const glm::vec3 &ambient,
                                    const glm::vec3 &direction)
     : Light(-direction, ambient, diffuse, specular, lightType),
       direction(direction) {
-  Camera lightView(position, direction, 20.0f, 20.0f, 1.0f, 7.5f);
-  lightSpaceTrans =
-      lightView.getProjectionMatrix(false) * lightView.getViewMatrix();
+  lightSpaceTrans = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 20.0f) *
+                    glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f), glm::vec3(0.0f),
+                                glm::vec3(0.0, 1.0, 0.0));
   genShadowMap();
 }
 
@@ -40,6 +42,11 @@ void DirectionalLight::genShadowMap() {
                          depthMapTex, 0);
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
+
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    std::cout << "Error loading the Depth Framebuffer" << std::endl;
+    return;
+  }
 
   // unbind
   glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -13,8 +13,8 @@ class Camera {
 public:
   Camera() = default;
   ~Camera() = default;
-  Camera(const glm::vec3 &position, const glm::vec3 &front, float width,
-         float height, float near, float far);
+  Camera(const glm::vec3 &position, float width, float height, float near,
+         float far);
   Camera(const glm::vec3 position);
   void processKeyboard(CameraMovement movement, float deltaTime);
   void processMouseMovement(float xOffset, float yOffset,

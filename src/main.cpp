@@ -61,7 +61,7 @@ int main() {
   glm::vec3 specularColor(1.0f, 1.0f, 1.0f);
   DirectionalLight directionalLight(ambientColor, diffuseColor, specularColor,
                                     LightType ::DIRECT,
-                                    glm::vec3(4.0f, -8.0f, -3.0f));
+                                    glm::vec3(2.0f, -4.0f, -1.0f));
   lights.push_back(&directionalLight);
   //  DirectionalLight directionalLight1(ambientColor, diffuseColor,
   //  specularColor,

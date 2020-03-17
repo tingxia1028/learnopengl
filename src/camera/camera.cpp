@@ -16,10 +16,10 @@ const float ZOOM = 45.0f;
 const float NEAR = 0.01f;
 const float FAR = 100.0f;
 
-Camera::Camera(const glm::vec3 &position, const glm::vec3 &front, float width,
-               float height, float near, float far)
-    : position(position), front(front), worldUp(WORLD_UP), width(width),
-      height(height), near(near), far(far) {
+Camera::Camera(const glm::vec3 &position, float width, float height, float near,
+               float far)
+    : position(position), worldUp(WORLD_UP), width(width), height(height),
+      near(near), far(far) {
   updateCameraData();
 }
 

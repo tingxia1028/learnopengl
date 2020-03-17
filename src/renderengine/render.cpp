@@ -34,10 +34,19 @@ void Render::renderShadowMap(Scene &scene, ShaderProgram &shaderProgram) {
   glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 
   for (unsigned int i = 0; i < scene.lights.size(); ++i) {
+    glClear(GL_DEPTH_BUFFER_BIT);
     Light *light = scene.lights[i];
     shaderProgram.uniformSetMat4("lightSpaceTrans", light->lightSpaceTrans);
+    glm::mat4 result = light->lightSpaceTrans *
+                       (scene.models[0].transformation.getTransformationMat());
+    glm::mat4 mat = scene.models[0].transformation.getTransformationMat();
+    glm::vec4 vec1(10, 75, 104, 1.0f);
+    glm::vec4 re1 = mat * vec1;
+    glm::vec4 vec2(122, 230, 70, 1.0f);
+    glm::vec4 re2 = mat * vec2;
+    glm::vec4 result3 = result * glm::vec4(10, 75, 104, 1.0f);
+    glm::vec4 result4 = result * glm::vec4(122, 230, 70, 1.0f);
     glBindFramebuffer(GL_FRAMEBUFFER, light->shadowMapFBO);
-    glClear(GL_DEPTH_BUFFER_BIT);
     render(scene, shaderProgram);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
@@ -45,13 +54,12 @@ void Render::renderShadowMap(Scene &scene, ShaderProgram &shaderProgram) {
 
 void Render::debugRenderShadowMap(Scene &scene, ShaderProgram &shaderProgram) {
   Light *light = scene.lights[0];
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, light->depthMapTex);
   shaderProgram.uniformSetFloat("near", 1.0f);
   shaderProgram.uniformSetFloat("far", 7.5f);
   shaderProgram.uniformSetInt("depthMap", 0);
   shaderProgram.uniformSetMat4("lightSpaceTrans", light->lightSpaceTrans);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, light->depthMapTex);
-
   render(scene, shaderProgram);
 }
 
@@ -79,6 +87,8 @@ void Render::configureLights(std::vector<Light *> &lights,
   int depthMapNum = 0;
   for (unsigned int i = 0; i < lights.size(); ++i) {
     Light *light = lights[i];
+    glActiveTexture(GL_TEXTURE0 + depthMapNum);
+    glBindTexture(GL_TEXTURE_2D, light->depthMapTex);
     std::string lightTypeStr = LightTypeToString(light->lightType);
     if (light->lightType == LightType::DIRECT) {
       lightIndexStr = std::to_string(dirNum);
@@ -101,8 +111,6 @@ void Render::configureLights(std::vector<Light *> &lights,
                                                  lightIndexStr, depthMapNum);
       ++spotNum;
     }
-    glActiveTexture(GL_TEXTURE0 + depthMapNum);
-    glBindTexture(GL_TEXTURE_2D, light->depthMapTex);
     ++depthMapNum;
   }
   shaderProgram.uniformSetInt("dirNum", dirNum);
