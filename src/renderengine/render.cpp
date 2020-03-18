@@ -7,6 +7,7 @@
 #include "../scene/scene.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <set>
 
 void Render::prepare(Camera *camera, DisplayManager &displayManager) {
   glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -30,22 +31,17 @@ void Render::prepare(Camera *camera, DisplayManager &displayManager) {
   glViewport(0, 0, 2 * displayManager.width, 2 * displayManager.height);
 }
 
-void Render::renderShadowMap(Scene &scene, ShaderProgram &shaderProgram) {
+void Render::renderShadowMap(Scene &scene, ShaderProgram &shaderProgram,
+                             std::set<LightType> &lightTypes) {
   glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 
   for (unsigned int i = 0; i < scene.lights.size(); ++i) {
-    glClear(GL_DEPTH_BUFFER_BIT);
     Light *light = scene.lights[i];
-    shaderProgram.uniformSetMat4("lightSpaceTrans", light->lightSpaceTrans);
-    glm::mat4 result = light->lightSpaceTrans *
-                       (scene.models[0].transformation.getTransformationMat());
-    glm::mat4 mat = scene.models[0].transformation.getTransformationMat();
-    glm::vec4 vec1(10, 75, 104, 1.0f);
-    glm::vec4 re1 = mat * vec1;
-    glm::vec4 vec2(122, 230, 70, 1.0f);
-    glm::vec4 re2 = mat * vec2;
-    glm::vec4 result3 = result * glm::vec4(10, 75, 104, 1.0f);
-    glm::vec4 result4 = result * glm::vec4(122, 230, 70, 1.0f);
+    if (!lightTypes.count(light->lightType)) {
+      continue;
+    }
+    light->configureShadowMatrices(shaderProgram);
+    glClear(GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, light->shadowMapFBO);
     render(scene, shaderProgram);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -54,17 +50,14 @@ void Render::renderShadowMap(Scene &scene, ShaderProgram &shaderProgram) {
 
 void Render::debugRenderShadowMap(Scene &scene, ShaderProgram &shaderProgram) {
   Light *light = scene.lights[0];
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, light->depthMapTex);
+  light->configureShadowMatrices(shaderProgram);
   shaderProgram.uniformSetFloat("near", 1.0f);
   shaderProgram.uniformSetFloat("far", 7.5f);
-  shaderProgram.uniformSetInt("depthMap", 0);
-  shaderProgram.uniformSetMat4("lightSpaceTrans", light->lightSpaceTrans);
-  render(scene, shaderProgram);
+  render(scene, shaderProgram, false, false, true);
 }
 
 void Render::render(Scene &scene, ShaderProgram &shaderProgram, bool withLights,
-                    bool withMaterials) {
+                    bool withMaterials, bool withShadowMap) {
   // camera
   shaderProgram.uniformSetVec3F("viewPos", scene.camera->getPosition());
 
@@ -75,7 +68,10 @@ void Render::render(Scene &scene, ShaderProgram &shaderProgram, bool withLights,
 
   // models
   for (unsigned int i = 0; i < scene.models.size(); ++i) {
-    scene.models[i].draw(shaderProgram, scene.lights.size(), withMaterials);
+    std::vector<Light *> nullLights{};
+    scene.models[i].draw(shaderProgram,
+                         withShadowMap ? scene.lights : nullLights,
+                         withMaterials);
     std::cout << "render:" << glGetError() << std::endl;
   }
 }
@@ -87,31 +83,21 @@ void Render::configureLights(std::vector<Light *> &lights,
   int depthMapNum = 0;
   for (unsigned int i = 0; i < lights.size(); ++i) {
     Light *light = lights[i];
-    glActiveTexture(GL_TEXTURE0 + depthMapNum);
-    glBindTexture(GL_TEXTURE_2D, light->depthMapTex);
+    light->depthMapIndex = depthMapNum++;
     std::string lightTypeStr = LightTypeToString(light->lightType);
-    if (light->lightType == LightType::DIRECT) {
-      lightIndexStr = std::to_string(dirNum);
-      static_cast<DirectionalLight *>(light)->configure(
-          shaderProgram, lightTypeStr, lightIndexStr, depthMapNum);
-      ++dirNum;
-    } else if (light->lightType == LightType::POINT) {
-      lightIndexStr = std::to_string(pointNum);
-      static_cast<PointLight *>(light)->configure(shaderProgram, lightTypeStr,
-                                                  lightIndexStr, depthMapNum);
-      ++pointNum;
-    } else if (light->lightType == LightType::FLASH) {
-      lightIndexStr = std::to_string(spotNum);
-      static_cast<FlashLight *>(light)->configure(shaderProgram, lightTypeStr,
-                                                  lightIndexStr, depthMapNum);
-      ++spotNum;
-    } else if (light->lightType == LightType::SPOT) {
-      lightIndexStr = std::to_string(spotNum);
-      static_cast<SpotLight *>(light)->configure(shaderProgram, lightTypeStr,
-                                                 lightIndexStr, depthMapNum);
-      ++spotNum;
+    switch (light->lightType) {
+    case DIRECT:
+      lightIndexStr = std::to_string(dirNum++);
+      break;
+    case POINT:
+      lightIndexStr = std::to_string(pointNum++);
+      break;
+    case FLASH:
+    case SPOT:
+      lightIndexStr = std::to_string(pointNum++);
+      break;
     }
-    ++depthMapNum;
+    light->configure(shaderProgram, lightTypeStr, lightIndexStr);
   }
   shaderProgram.uniformSetInt("dirNum", dirNum);
   shaderProgram.uniformSetInt("pointNum", pointNum);

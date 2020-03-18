@@ -9,9 +9,12 @@ public:
                    const glm::vec3 &specular, const LightType lightType,
                    const glm::vec3 &direction);
   void configure(ShaderProgram &shaderProgram, std::string lightType,
-                 std::string index, int depthMapIndex) override;
+                 std::string index) override;
+  void configureShadowMatrices(ShaderProgram &shaderProgram) override;
+  void activeShadowTex() override;
 
   glm::vec3 direction;
+  glm::mat4 lightSpaceTrans;
 
 private:
   void genShadowMap() override;

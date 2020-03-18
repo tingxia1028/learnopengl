@@ -2,6 +2,7 @@
 #ifndef OPENGL_MESH_H
 #define OPENGL_MESH_H
 
+#include "../light/light.h"
 #include "../material/material.h"
 #include "../renderengine/shader.h"
 #include <glm/vec3.hpp>
@@ -19,7 +20,8 @@ public:
   Mesh(std::string name, const std::vector<Vertex> &vertices,
        const std::vector<unsigned int> &indices,
        const std::vector<Material> &materials);
-  void draw(ShaderProgram &shaderProgram, bool withMaterials, int lightsNum);
+  void draw(ShaderProgram &shaderProgram, bool withMaterials,
+            std::vector<Light *> &lights);
 
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
@@ -32,7 +34,8 @@ private:
   void create();
   void storeData();
   void unbind();
-  void configureMaterials(ShaderProgram &shaderProgram, int lightsNum);
+  void configureMaterials(ShaderProgram &shaderProgram);
+  int textureIndex = 0;
 };
 
 #endif // OPENGL_MESH_H

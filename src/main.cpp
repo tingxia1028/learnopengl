@@ -59,19 +59,20 @@ int main() {
   glm::vec3 ambientColor(0.2f, 0.2f, 0.2f);
   glm::vec3 diffuseColor(0.9f, 0.9f, 0.9f);
   glm::vec3 specularColor(1.0f, 1.0f, 1.0f);
-  DirectionalLight directionalLight(ambientColor, diffuseColor, specularColor,
-                                    LightType ::DIRECT,
-                                    glm::vec3(2.0f, -4.0f, -1.0f));
-  lights.push_back(&directionalLight);
+  //  DirectionalLight directionalLight(ambientColor, diffuseColor,
+  //  specularColor,
+  //                                    LightType ::DIRECT,
+  //                                    glm::vec3(2.0f, -4.0f, -0.5f));
+  //  lights.push_back(&directionalLight);
   //  DirectionalLight directionalLight1(ambientColor, diffuseColor,
   //  specularColor,
   //                                     LightType ::DIRECT,
   //                                     glm::vec3(0.2f, 1.0f, -0.3f));
   //  lights.push_back(&directionalLight1);
-  //  PointLight pointLight(ambientColor, diffuseColor, specularColor,
-  //                        LightType ::POINT, glm::vec3(-0.25f, 1.0f,
-  //                        0.0f), 1.0f, 0.09f, 0.032f);
-  //  lights.push_back(&pointLight);
+  PointLight pointLight(ambientColor, diffuseColor, specularColor,
+                        LightType ::POINT, glm::vec3(-0.25f, 1.0f, 0.0f), 1.0f,
+                        0.09f, 0.032f);
+  lights.push_back(&pointLight);
 
   // skyBox
   std::vector<std::string> skyTexs{
@@ -91,11 +92,11 @@ int main() {
       {GL_FRAGMENT_SHADER, "../src/shaders/basic/fragment.shader"}};
   ShaderProgram modelShader = ShaderProgram(modelShaders);
 
-  // outline shaders
-  std::vector<ShaderInfo> outlineShaders{
-      {GL_VERTEX_SHADER, "../src/shaders/lightVertex.shader"},
-      {GL_FRAGMENT_SHADER, "../src/shaders/outlineFrag.shader"}};
-  ShaderProgram outlineShader = ShaderProgram(outlineShaders);
+  // simplest shaders: for outline, light objects, etc
+  std::vector<ShaderInfo> simplestShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/simplest/simpleVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/simplest/simpleFrag.shader"}};
+  ShaderProgram simplestShader = ShaderProgram(simplestShaders);
 
   // skyBox shaders
   std::vector<ShaderInfo> skyBoxShaders{
@@ -111,19 +112,21 @@ int main() {
   ShaderProgram normalShader = ShaderProgram(normalShaders);
 
   // shadow map shaders
-  std::vector<ShaderInfo> shadowShaders{
-      {GL_VERTEX_SHADER, "../src/shaders/shadow/depthmapVertex.shader"},
-      {GL_FRAGMENT_SHADER, "../src/shaders/shadow/depthmapFrag.shader"}};
-  ShaderProgram shadowShader = ShaderProgram(shadowShaders);
+  std::vector<ShaderInfo> directShadowShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/shadow/directionLightVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/shadow/directionLightFrag.shader"}};
+  ShaderProgram directShadowShader = ShaderProgram(directShadowShaders);
+  std::vector<ShaderInfo> pointShadowShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/shadow/pointLightVertex.shader"},
+      {GL_GEOMETRY_SHADER, "../src/shaders/shadow/pointLightGeo.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/shadow/pointLightFrag.shader"}};
+  ShaderProgram pointShadowShader = ShaderProgram(pointShadowShaders);
 
   // debug shadow map shaders
   std::vector<ShaderInfo> debugShadowShaders{
       {GL_VERTEX_SHADER, "../src/shaders/shadow/debugDepthVertex.shader"},
       {GL_FRAGMENT_SHADER, "../src/shaders/shadow/debugDepthFrag.shader"}};
   ShaderProgram debugShadowShader = ShaderProgram(debugShadowShaders);
-
-  float deltaTime = 0.0f;
-  float lastFrame = 0.0f;
 
   /**
    * render loop
@@ -132,18 +135,26 @@ int main() {
 
     displayManager.interactionCallback();
 
-    shadowShader.use();
-    Render::renderShadowMap(scene, shadowShader);
+    //    directShadowShader.use();
+    //    std::set<LightType> directSet;
+    //    directSet.insert(DIRECT);
+    //    Render::renderShadowMap(scene, directShadowShader, directSet);
 
-    Render::prepare(&camera, displayManager);
-    debugShadowShader.use();
-    modelShader.bindUniformBlock("Matrices", 0);
-    Render::debugRenderShadowMap(scene, debugShadowShader);
+    pointShadowShader.use();
+    std::set<LightType> pointSet;
+    pointSet.insert(POINT);
+    pointSet.insert(SPOT);
+    Render::renderShadowMap(scene, pointShadowShader, pointSet);
+
+    //    Render::prepare(&camera, displayManager);
+    //    debugShadowShader.use();
+    //    modelShader.bindUniformBlock("Matrices", 0);
+    //    Render::debugRenderShadowMap(scene, debugShadowShader);
 
     //    Render::prepare(&camera, displayManager);
     //    modelShader.use();
     //    modelShader.bindUniformBlock("Matrices", 0);
-    //    Render::render(scene, modelShader, true, true);
+    //    Render::render(scene, modelShader, true, true, true);
 
     //    normalShader.use();
     //    Render::render(scene, normalShader, false, false);

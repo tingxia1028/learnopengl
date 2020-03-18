@@ -11,7 +11,7 @@ public:
             float quadraticTerm, const glm::vec3 &direction, float cutoffCos,
             float outCutoffCos);
   void configure(ShaderProgram &shaderProgram, std::string lightType,
-                 std::string index, int depthMapIndex) override;
+                 std::string index) override;
 
   glm::vec3 direction;
   float cutoffCos;

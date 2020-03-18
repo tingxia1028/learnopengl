@@ -11,15 +11,17 @@ public:
              const glm::vec3 &position, float constTerm, float linearTerm,
              float quadraticTerm);
   void configure(ShaderProgram &shaderProgram, std::string lightType,
-                 std::string index, int depthMapIndex) override;
+                 std::string index) override;
+  void configureShadowMatrices(ShaderProgram &shaderProgram) override;
+  void activeShadowTex() override;
 
-private:
-  void genShadowMap() override;
-
-public:
   float constTerm;
   float linearTerm;
   float quadraticTerm;
+  float farPlane;
+
+private:
+  void genShadowMap() override;
 };
 
 #endif // OPENGL_POINTLIGHT_H

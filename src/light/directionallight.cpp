@@ -10,16 +10,17 @@ DirectionalLight::DirectionalLight(const glm::vec3 &ambient,
                                    const glm::vec3 &direction)
     : Light(-direction, ambient, diffuse, specular, lightType),
       direction(direction) {
-  lightSpaceTrans = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 20.0f) *
-                    glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f), glm::vec3(0.0f),
-                                glm::vec3(0.0, 1.0, 0.0));
+  lightSpaceTrans =
+      glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 1.0f, 5.5f) *
+      glm::lookAt(position, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
   genShadowMap();
 }
 
 void DirectionalLight::configure(ShaderProgram &shaderProgram,
-                                 std::string lightType, std::string index,
-                                 int depthMapIndex) {
-  Light::configure(shaderProgram, lightType, index, depthMapIndex);
+                                 std::string lightType, std::string index) {
+  Light::configure(shaderProgram, lightType, index);
+  shaderProgram.uniformSetMat4(lightType + "s[" + index + "].lightSpaceTrans",
+                               lightSpaceTrans);
   shaderProgram.uniformSetVec3F(lightType + "s[" + index + "].direction",
                                 direction);
 }
@@ -32,8 +33,10 @@ void DirectionalLight::genShadowMap() {
                SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+  float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
   // framebuffer
   glGenFramebuffers(1, &shadowMapFBO);
@@ -51,4 +54,13 @@ void DirectionalLight::genShadowMap() {
   // unbind
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void DirectionalLight::configureShadowMatrices(ShaderProgram &shaderProgram) {
+  shaderProgram.uniformSetMat4("lightSpaceTrans", lightSpaceTrans);
+}
+
+void DirectionalLight::activeShadowTex() {
+  glActiveTexture(depthMapIndex);
+  glBindTexture(GL_TEXTURE_2D, depthMapTex);
 }

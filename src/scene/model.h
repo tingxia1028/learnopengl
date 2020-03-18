@@ -2,6 +2,7 @@
 #ifndef OPENGL_MODEL_H
 #define OPENGL_MODEL_H
 
+#include "../light/light.h"
 #include "../material/material.h"
 #include "../transformation/rotate.h"
 #include "../transformation/transformation.h"
@@ -18,7 +19,7 @@ public:
   Model() = default;
   ~Model() = default;
   Model(const std::string &path, Transformation &transformation);
-  void draw(ShaderProgram &shaderProgram, int lightsNum,
+  void draw(ShaderProgram &shaderProgram, std::vector<Light *> &lights,
             bool withMaterials = false);
 
   std::vector<Mesh> meshes;

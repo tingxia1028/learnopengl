@@ -10,8 +10,8 @@ FlashLight::FlashLight(const glm::vec3 &ambient, const glm::vec3 &diffuse,
       outCutoffCos(outCutoffCos), camera(camera) {}
 
 void FlashLight::configure(ShaderProgram &shaderProgram, std::string lightType,
-                           std::string index, int depthMapIndex) {
-  Light::configure(shaderProgram, lightType, index, depthMapIndex);
+                           std::string index) {
+  Light::configure(shaderProgram, lightType, index);
   shaderProgram.uniformSetVec3F(lightType + "s[" + index + "].position",
                                 camera->getPosition());
   shaderProgram.uniformSetVec3F(lightType + "s[" + index + "].direction",
@@ -27,3 +27,9 @@ void FlashLight::configure(ShaderProgram &shaderProgram, std::string lightType,
   shaderProgram.uniformSetFloat(lightType + "s[" + index + "].outCutoff",
                                 outCutoffCos);
 }
+
+void FlashLight::configureShadowMatrices(ShaderProgram &shaderProgram) {}
+
+void FlashLight::activeShadowTex() {}
+
+void FlashLight::genShadowMap() {}

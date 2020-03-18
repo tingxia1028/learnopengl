@@ -15,14 +15,20 @@ void Mesh::loadData() {
 }
 
 void Mesh::draw(ShaderProgram &shaderProgram, bool withMaterials,
-                int lightsNum) {
+                std::vector<Light *> &lights) {
   glBindVertexArray(VAO);
   for (unsigned int i = 0; i < ATTRIBUTE_NUM; ++i) {
     glEnableVertexAttribArray(i);
   }
 
+  for (Light *light : lights) {
+    light->activeShadowTex();
+  }
+
+  textureIndex = lights.size();
+
   if (withMaterials) {
-    configureMaterials(shaderProgram, lightsNum);
+    configureMaterials(shaderProgram);
   }
 
   if (!indices.empty()) {
@@ -37,9 +43,10 @@ void Mesh::draw(ShaderProgram &shaderProgram, bool withMaterials,
   glBindVertexArray(0);
   glBindTexture(GL_TEXTURE_2D, 0);
   glActiveTexture(GL_TEXTURE0);
+  textureIndex = 0;
 }
 
-void Mesh::configureMaterials(ShaderProgram &shaderProgram, int lightsNum) {
+void Mesh::configureMaterials(ShaderProgram &shaderProgram) {
   for (unsigned int j = 0; j < materials.size(); ++j) {
     std::string index = std::to_string(j);
     Material material = materials[j];
@@ -53,12 +60,13 @@ void Mesh::configureMaterials(ShaderProgram &shaderProgram, int lightsNum) {
                                  material.hasDiffuseTex);
     shaderProgram.uniformSetBool("materials[" + index + "].hasSpecularTex",
                                  material.hasSpecularTex);
-    for (unsigned int k = 0; k < material.textures.size(); ++k, ++lightsNum) {
-      glActiveTexture(GL_TEXTURE0 + lightsNum);
+    for (unsigned int k = 0; k < material.textures.size();
+         ++k, ++textureIndex) {
+      glActiveTexture(GL_TEXTURE0 + textureIndex);
       TextureData textureData = material.textures[k];
       shaderProgram.uniformSetInt("materials[" + index + "]." +
                                       TexTypeToString(textureData.type),
-                                  lightsNum);
+                                  textureIndex);
       glBindTexture(GL_TEXTURE_2D, textureData.textureID);
     }
   }

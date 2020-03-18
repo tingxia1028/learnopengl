@@ -11,8 +11,14 @@ public:
              float constTerm, float linearTerm, float quadraticTerm,
              float cutoffCos, float outCutoffCos, Camera *camera);
   void configure(ShaderProgram &shaderProgram, std::string lightType,
-                 std::string index, int depthMapIndex) override;
+                 std::string index) override;
+  void configureShadowMatrices(ShaderProgram &shaderProgram) override;
+  void activeShadowTex() override;
 
+private:
+  void genShadowMap() override;
+
+public:
   float constTerm;
   float linearTerm;
   float quadraticTerm;

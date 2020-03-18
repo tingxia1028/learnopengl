@@ -1,5 +1,6 @@
 
 #include "model.h"
+#include "../light/light.h"
 #include "../renderengine/stb_image.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -219,12 +220,12 @@ glm::vec3 Model::transformAIcolor(aiColor3D aiColor3D) {
   return glm::vec3(aiColor3D.r, aiColor3D.g, aiColor3D.b);
 }
 
-void Model::draw(ShaderProgram &shaderProgram, int lightsNum,
+void Model::draw(ShaderProgram &shaderProgram, std::vector<Light *> &lights,
                  bool withMaterials) {
   glm::mat4 modelTransform = transformation.getTransformationMat();
   shaderProgram.uniformSetMat4("model", modelTransform);
 
   for (unsigned int j = 0; j < meshes.size(); ++j) {
-    meshes[j].draw(shaderProgram, withMaterials, lightsNum);
+    meshes[j].draw(shaderProgram, withMaterials, lights);
   }
 }
