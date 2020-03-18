@@ -41,8 +41,8 @@ void Render::renderShadowMap(Scene &scene, ShaderProgram &shaderProgram,
       continue;
     }
     light->configureShadowMatrices(shaderProgram);
-    glClear(GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, light->shadowMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
     render(scene, shaderProgram);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }

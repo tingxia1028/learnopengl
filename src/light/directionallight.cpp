@@ -11,7 +11,7 @@ DirectionalLight::DirectionalLight(const glm::vec3 &ambient,
     : Light(-direction, ambient, diffuse, specular, lightType),
       direction(direction) {
   lightSpaceTrans =
-      glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 1.0f, 5.5f) *
+      glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 5.0f) *
       glm::lookAt(position, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
   genShadowMap();
 }
@@ -47,7 +47,8 @@ void DirectionalLight::genShadowMap() {
   glReadBuffer(GL_NONE);
 
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    std::cout << "Error loading the Depth Framebuffer" << std::endl;
+    std::cout << "Error loading the directionLight Depth Framebuffer"
+              << std::endl;
     return;
   }
 
@@ -61,6 +62,6 @@ void DirectionalLight::configureShadowMatrices(ShaderProgram &shaderProgram) {
 }
 
 void DirectionalLight::activeShadowTex() {
-  glActiveTexture(depthMapIndex);
+  glActiveTexture(GL_TEXTURE0 + depthMapIndex);
   glBindTexture(GL_TEXTURE_2D, depthMapTex);
 }

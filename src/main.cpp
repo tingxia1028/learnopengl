@@ -12,10 +12,15 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
 int SCR_WIDTH = 800;
 int SCR_HEIGHT = 600;
+
+// render light objects
+void renderScene(ShaderProgram &shader, glm::vec3 &lightPos);
+void renderCube();
 
 int main() {
   /**
@@ -62,7 +67,7 @@ int main() {
   //  DirectionalLight directionalLight(ambientColor, diffuseColor,
   //  specularColor,
   //                                    LightType ::DIRECT,
-  //                                    glm::vec3(2.0f, -4.0f, -0.5f));
+  //                                    glm::vec3(-0.05f, -0.5f, 0.05f));
   //  lights.push_back(&directionalLight);
   //  DirectionalLight directionalLight1(ambientColor, diffuseColor,
   //  specularColor,
@@ -70,7 +75,7 @@ int main() {
   //                                     glm::vec3(0.2f, 1.0f, -0.3f));
   //  lights.push_back(&directionalLight1);
   PointLight pointLight(ambientColor, diffuseColor, specularColor,
-                        LightType ::POINT, glm::vec3(-0.25f, 1.0f, 0.0f), 1.0f,
+                        LightType ::POINT, glm::vec3(0.0f, -0.75f, 0.0f), 1.0f,
                         0.09f, 0.032f);
   lights.push_back(&pointLight);
 
@@ -135,32 +140,39 @@ int main() {
 
     displayManager.interactionCallback();
 
-    //    directShadowShader.use();
-    //    std::set<LightType> directSet;
-    //    directSet.insert(DIRECT);
-    //    Render::renderShadowMap(scene, directShadowShader, directSet);
+    directShadowShader.use();
+    Render::prepare(nullptr, displayManager);
+    std::set<LightType> directSet;
+    directSet.insert(DIRECT);
+    Render::renderShadowMap(scene, directShadowShader, directSet);
 
     pointShadowShader.use();
+    Render::prepare(nullptr, displayManager);
     std::set<LightType> pointSet;
     pointSet.insert(POINT);
     pointSet.insert(SPOT);
     Render::renderShadowMap(scene, pointShadowShader, pointSet);
 
-    //    Render::prepare(&camera, displayManager);
     //    debugShadowShader.use();
+    //    Render::prepare(&camera, displayManager);
     //    modelShader.bindUniformBlock("Matrices", 0);
     //    Render::debugRenderShadowMap(scene, debugShadowShader);
 
-    //    Render::prepare(&camera, displayManager);
-    //    modelShader.use();
-    //    modelShader.bindUniformBlock("Matrices", 0);
-    //    Render::render(scene, modelShader, true, true, true);
+    modelShader.use();
+    Render::prepare(&camera, displayManager);
+    modelShader.bindUniformBlock("Matrices", 0);
+    Render::render(scene, modelShader, true, true, true);
 
     //    normalShader.use();
     //    Render::render(scene, normalShader, false, false);
 
     //    skyBoxShader.use();
     //    Render::renderSkyBox(scene, skyBoxShader);
+
+    //    simplestShader.use();
+    //    for (Light *light : lights) {
+    //      renderScene(simplestShader, light->position);
+    //    }
 
     displayManager.afterward();
     // poll IO events, eg. mouse moved etc.
@@ -173,4 +185,88 @@ int main() {
   glfwTerminate();
 
   return 0;
+}
+
+void renderScene(ShaderProgram &shader, glm::vec3 &lightPos) {
+  // cubes
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::mat4(1.0f);
+  model = glm::translate(model, lightPos);
+  model = glm::scale(model, glm::vec3(0.005f));
+  shader.uniformSetMat4("model", model);
+  renderCube();
+}
+
+unsigned int cubeVAO = 0;
+unsigned int cubeVBO = 0;
+void renderCube() {
+  // initialize (if necessary)
+  if (cubeVAO == 0) {
+    float vertices[] = {
+        // back face
+        -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+        1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,   // top-right
+        1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,  // bottom-right
+        1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,   // top-right
+        -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+        -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,  // top-left
+        // front face
+        -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+        1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,  // bottom-right
+        1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,   // top-right
+        1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,   // top-right
+        -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,  // top-left
+        -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+        // left face
+        -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-right
+        -1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f,  // top-left
+        -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-left
+        -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-left
+        -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  // bottom-right
+        -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-right
+        // right face
+        1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-left
+        1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-right
+        1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,  // top-right
+        1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-right
+        1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-left
+        1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  // bottom-left
+        // bottom face
+        -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // top-right
+        1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,  // top-left
+        1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,   // bottom-left
+        1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,   // bottom-left
+        -1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,  // bottom-right
+        -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // top-right
+        // top face
+        -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
+        1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom-right
+        1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,  // top-right
+        1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom-right
+        -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
+        -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f   // bottom-left
+    };
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
+    // fill buffer
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // link vertex attributes
+    glBindVertexArray(cubeVAO);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void *)(6 * sizeof(float)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+  }
+  // render Cube
+  glBindVertexArray(cubeVAO);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
+  glBindVertexArray(0);
 }

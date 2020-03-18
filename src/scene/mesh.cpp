@@ -42,6 +42,7 @@ void Mesh::draw(ShaderProgram &shaderProgram, bool withMaterials,
   }
   glBindVertexArray(0);
   glBindTexture(GL_TEXTURE_2D, 0);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
   glActiveTexture(GL_TEXTURE0);
   textureIndex = 0;
 }

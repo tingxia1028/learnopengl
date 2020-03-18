@@ -1,7 +1,7 @@
-
 #include "pointlight.h"
 #include "../renderengine/render.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 PointLight::PointLight(const glm::vec3 &ambient, const glm::vec3 &diffuse,
                        const glm::vec3 &specular, const LightType lightType,
                        const glm::vec3 &position, float constTerm,
@@ -28,69 +28,68 @@ void PointLight::configure(ShaderProgram &shaderProgram, std::string lightType,
 }
 
 void PointLight::genShadowMap() {
-  // cube textures
+  glGenFramebuffers(1, &shadowMapFBO);
+  // create depth cubemap texture
   glGenTextures(1, &depthMapTex);
   glBindTexture(GL_TEXTURE_CUBE_MAP, depthMapTex);
-  for (unsigned int i = 0; i < 6; ++i) {
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X + i, 0, GL_DEPTH_COMPONENT,
+  for (unsigned int i = 0; i < 6; ++i)
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
                  SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
                  NULL);
-  }
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-  // framebuffer
-  glGenFramebuffers(1, &shadowMapFBO);
+  // attach depth texture as FBO's depth buffer
   glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMapTex, 0);
   glDrawBuffer(GL_NONE);
-  glDrawBuffer(GL_NONE);
-
-  // unbind
+  glReadBuffer(GL_NONE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 void PointLight::configureShadowMatrices(ShaderProgram &shaderProgram) {
-  float nearPlane = 1.0f;
-  farPlane = 25.0f;
-  glm::mat4 projection = glm::perspective(
+  float nearPlane = 0.01f;
+  farPlane = 5.0f;
+  glm::mat4 shadowProj = glm::perspective(
       glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT,
       nearPlane, farPlane);
   std::vector<glm::mat4> shadowTransforms;
   shadowTransforms.push_back(
-      projection * glm::lookAt(position, position + glm::vec3(1.0f, 0.0f, 0.0f),
-                               glm::vec3(0.0, -1.0f, 0.0f)));
+      shadowProj * glm::lookAt(position, position + glm::vec3(1.0f, 0.0f, 0.0f),
+                               glm::vec3(0.0f, -1.0f, 0.0f)));
   shadowTransforms.push_back(
-      projection * glm::lookAt(position,
+      shadowProj * glm::lookAt(position,
                                position + glm::vec3(-1.0f, 0.0f, 0.0f),
-                               glm::vec3(0.0, -1.0f, 0.0f)));
+                               glm::vec3(0.0f, -1.0f, 0.0f)));
   shadowTransforms.push_back(
-      projection * glm::lookAt(position, position + glm::vec3(0.0f, 1.0f, 0.0f),
-                               glm::vec3(0.0, 0.0f, 1.0f)));
+      shadowProj * glm::lookAt(position, position + glm::vec3(0.0f, 1.0f, 0.0f),
+                               glm::vec3(0.0f, 0.0f, 1.0f)));
   shadowTransforms.push_back(
-      projection * glm::lookAt(position,
+      shadowProj * glm::lookAt(position,
                                position + glm::vec3(0.0f, -1.0f, 0.0f),
-                               glm::vec3(0.0, 0.0f, -1.0f)));
+                               glm::vec3(0.0f, 0.0f, -1.0f)));
   shadowTransforms.push_back(
-      projection * glm::lookAt(position, position + glm::vec3(0.0f, 0.0f, 1.0f),
-                               glm::vec3(0.0, -1.0f, 0.0f)));
+      shadowProj * glm::lookAt(position, position + glm::vec3(0.0f, 0.0f, 1.0f),
+                               glm::vec3(0.0f, -1.0f, 0.0f)));
   shadowTransforms.push_back(
-      projection * glm::lookAt(position,
+      shadowProj * glm::lookAt(position,
                                position + glm::vec3(0.0f, 0.0f, -1.0f),
-                               glm::vec3(0.0, -1.0f, 0.0f)));
+                               glm::vec3(0.0f, -1.0f, 0.0f)));
   for (unsigned int i = 0; i < 6; ++i) {
     shaderProgram.uniformSetMat4("shadowMatrices[" + std::to_string(i) + "]",
                                  shadowTransforms[i]);
   }
+  glm::vec3 point(110.0, 20.0, 96.0);
+  glm::vec4 result = shadowTransforms[0] * glm::vec4(point, 1.0f);
+
   shaderProgram.uniformSetFloat("far", farPlane);
   shaderProgram.uniformSetVec3F("lightPos", position);
 }
 
 void PointLight::activeShadowTex() {
-  glActiveTexture(depthMapIndex);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, depthMapIndex);
+  glActiveTexture(GL_TEXTURE0 + depthMapIndex);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, depthMapTex);
 }

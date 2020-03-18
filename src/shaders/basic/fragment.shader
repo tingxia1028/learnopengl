@@ -71,7 +71,7 @@ uniform vec3 viewPos;
 const float gamma = 2.2;
 const float pointShadowBias = 0.15;
 const int samples = 20;
-const vec3 sampleOffsetDirections[samples] = vec3[]
+const vec3 sampleOffsetDirections[20] = vec3[]
 (
 vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1),
 vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
@@ -218,7 +218,7 @@ float pointShadowCalculation(vec3 fragPos, vec3 lightPos, float farPlane, sample
         float shadowDepth = texture(shadowMap, direction+sampleOffsetDirections[i]*diskRadius).r;
         shadowDepth *= farPlane;
         if(currentDepth-pointShadowBias>shadowDepth){
-            shadowDepth+=1.0;
+            shadow+=1.0;
         }
     }
 
