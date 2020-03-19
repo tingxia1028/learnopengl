@@ -185,9 +185,10 @@ unsigned int Model::TextureFromFile(const char *path,
   if (data) {
     GLenum format;
     GLenum internalFormat;
-    if (nrComponents == 1)
+    if (nrComponents == 1) {
       format = GL_RED;
-    else if (nrComponents == 3) {
+      internalFormat = GL_RED;
+    } else if (nrComponents == 3) {
       format = GL_RGB;
       internalFormat = isDiffuse ? GL_SRGB : GL_RGB;
     } else if (nrComponents == 4) {
