@@ -94,7 +94,7 @@ void Render::configureLights(std::vector<Light *> &lights,
       break;
     case FLASH:
     case SPOT:
-      lightIndexStr = std::to_string(pointNum++);
+      lightIndexStr = std::to_string(spotNum++);
       break;
     }
     light->configure(shaderProgram, lightTypeStr, lightIndexStr);
