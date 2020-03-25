@@ -73,12 +73,6 @@ void Render::render(Scene &scene, ShaderProgram &shaderProgram, bool withLights,
   }
 }
 
-void Render::deferredRender(ShaderProgram &shader, Scene &scene) {
-  glBindFramebuffer(GL_FRAMEBUFFER, scene.deferredFBO);
-  render(scene, shader, true, true, true);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
 void Render::configureLights(std::vector<Light *> &lights,
                              ShaderProgram &shaderProgram) {
   int dirNum = 0, pointNum = 0, spotNum = 0;
@@ -216,11 +210,10 @@ GLuint Render::quadVAO = 0;
 GLuint Render::quadVBO = 0;
 
 void Render::renderQuad(ShaderProgram &shader, Scene &scene) {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, scene.deferredTex);
   shader.uniformSetInt("deferredTex", 0);
-  shader.uniformSetBool("isHdr", false);
+  shader.uniformSetBool("isHdr", true);
   shader.uniformSetFloat("exposure", scene.camera->exposure);
   if (quadVAO == 0) {
     float quadVertices[] = {
@@ -231,15 +224,17 @@ void Render::renderQuad(ShaderProgram &shader, Scene &scene) {
     glBindVertexArray(quadVAO);
     glGenBuffers(1, &quadVBO);
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices,
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices,
                  GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float),
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                           (void *)(3 * sizeof(float)));
   }
   glBindVertexArray(quadVAO);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   glBindVertexArray(0);
+  std::cout << "renderQuad:" << glGetError() << std::endl;
 }

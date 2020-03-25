@@ -23,7 +23,6 @@ public:
   GLuint deferredFBO;
   GLuint deferredTex;
   GLuint deferredRBO;
-  float exposure;
 };
 
 #endif // OPENGL_SCENE_H

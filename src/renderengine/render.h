@@ -21,7 +21,6 @@ public:
   static void renderSkyBox(Scene &scene, ShaderProgram &shaderProgram);
   static void renderLight(ShaderProgram &shader, glm::vec3 &lightPos);
   static void renderQuad(ShaderProgram &shader, Scene &scene);
-  static void deferredRender(ShaderProgram &shader, Scene &scene);
   static GLuint cubeVAO;
   static GLuint cubeVBO;
   static GLuint quadVAO;

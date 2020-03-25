@@ -14,10 +14,6 @@
 int SCR_WIDTH = 800;
 int SCR_HEIGHT = 600;
 
-// render light objects
-void renderScene(ShaderProgram &shader, glm::vec3 &lightPos);
-void renderCube();
-
 int main() {
   /**
    * window
@@ -165,25 +161,28 @@ int main() {
     //    Render::prepare(&camera, displayManager);
     //    Render::renderSkyBox(scene, skyBoxShader);
 
+    glBindFramebuffer(GL_FRAMEBUFFER, scene.deferredFBO);
     modelShader.use();
     Render::prepare(&camera, displayManager);
     modelShader.bindUniformBlock("Matrices", 0);
-    //    Render::render(scene, modelShader, true, true, true);
-    Render::deferredRender(modelShader, scene);
+    Render::render(scene, modelShader, true, true, true);
+
+    simplestShader.use();
+    for (Light *light : lights) {
+      Render::renderLight(simplestShader, light->position);
+    }
+
+    skyBoxShader.use();
+    Render::renderSkyBox(scene, skyBoxShader);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     deferredShader.use();
+    Render::prepare(nullptr, displayManager);
     Render::renderQuad(deferredShader, scene);
 
     //    normalShader.use();
     //    Render::render(scene, normalShader);
-
-    //    simplestShader.use();
-    //    for (Light *light : lights) {
-    //      Render::renderLight(simplestShader, light->position);
-    //    }
-    //
-    //    skyBoxShader.use();
-    //    Render::renderSkyBox(scene, skyBoxShader);
 
     displayManager.afterward();
     // poll IO events, eg. mouse moved etc.

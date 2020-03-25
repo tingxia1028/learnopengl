@@ -23,6 +23,9 @@ void Scene::cleanUp() {
 }
 
 void Scene::generateFBO(int scrWidth, int scrHeight) {
+
+  glGenFramebuffers(1, &deferredFBO);
+
   // floating point color buffer
   glGenTextures(1, &deferredTex);
   glBindTexture(GL_TEXTURE_2D, deferredTex);
@@ -31,24 +34,21 @@ void Scene::generateFBO(int scrWidth, int scrHeight) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  // depth buffer
+  // create depth buffer (renderbuffer)
   glGenRenderbuffers(1, &deferredRBO);
   glBindRenderbuffer(GL_RENDERBUFFER, deferredRBO);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, scrWidth,
                         scrHeight);
-
-  // FBO
-  glGenFramebuffers(1, &deferredFBO);
+  // attach buffers
   glBindFramebuffer(GL_FRAMEBUFFER, deferredFBO);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                          deferredTex, 0);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                             GL_RENDERBUFFER, deferredRBO);
-  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    std::cout << "scene deferred render FBO not complete!" << std::endl;
-  }
 
-  // unbind
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    std::cout << "scene deferred render fbo not complete!" << std::endl;
+
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
   glBindRenderbuffer(GL_RENDERBUFFER, 0);
