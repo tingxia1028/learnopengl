@@ -28,7 +28,9 @@ void Mesh::draw(ShaderProgram &shaderProgram, bool withMaterials,
   textureIndex = lights.size();
 
   if (withMaterials) {
-    configureMaterials(shaderProgram);
+    for (unsigned int j = 0; j < materials.size(); ++j) {
+      materials[j].configure(shaderProgram, j, textureIndex);
+    }
   }
 
   if (!indices.empty()) {
@@ -45,32 +47,6 @@ void Mesh::draw(ShaderProgram &shaderProgram, bool withMaterials,
   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
   glActiveTexture(GL_TEXTURE0);
   textureIndex = 0;
-}
-
-void Mesh::configureMaterials(ShaderProgram &shaderProgram) {
-  for (unsigned int j = 0; j < materials.size(); ++j) {
-    std::string index = std::to_string(j);
-    Material material = materials[j];
-    shaderProgram.uniformSetFloat("materials[" + index + "].shininess",
-                                  material.shininess);
-    shaderProgram.uniformSetVec3F("materials[" + index + "].diffuseColor",
-                                  material.diffuse);
-    shaderProgram.uniformSetVec3F("materials[" + index + "].specularColor",
-                                  material.specular);
-    shaderProgram.uniformSetBool("materials[" + index + "].hasDiffuseTex",
-                                 material.hasDiffuseTex);
-    shaderProgram.uniformSetBool("materials[" + index + "].hasSpecularTex",
-                                 material.hasSpecularTex);
-    for (unsigned int k = 0; k < material.textures.size();
-         ++k, ++textureIndex) {
-      glActiveTexture(GL_TEXTURE0 + textureIndex);
-      TextureData textureData = material.textures[k];
-      shaderProgram.uniformSetInt("materials[" + index + "]." +
-                                      TexTypeToString(textureData.type),
-                                  textureIndex);
-      glBindTexture(GL_TEXTURE_2D, textureData.textureID);
-    }
-  }
 }
 
 void Mesh::create() {
@@ -97,6 +73,10 @@ void Mesh::storeData() {
                         (void *)offsetof(Vertex, normal));
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                         (void *)offsetof(Vertex, textureCoord));
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                        (void *)offsetof(Vertex, tangent));
+  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                        (void *)offsetof(Vertex, bitangent));
 }
 
 void Mesh::unbind() {

@@ -79,6 +79,16 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     } else {
       vertex.textureCoord = glm::vec2(0.0f, 0.0f);
     }
+    // tangent
+    vector.x = mesh->mTangents[i].x;
+    vector.y = mesh->mTangents[i].y;
+    vector.z = mesh->mTangents[i].z;
+    vertex.tangent = vector;
+    // bitangent
+    vector.x = mesh->mBitangents[i].x;
+    vector.y = mesh->mBitangents[i].y;
+    vector.z = mesh->mBitangents[i].z;
+    vertex.bitangent = vector;
     vertices.push_back(vertex);
   }
 
@@ -112,10 +122,18 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
   // 3. normal maps
   std::vector<TextureData> normalMaps =
       loadMaterialTextures(material, aiTextureType_HEIGHT, TextureType::NORMAL);
+  if (normalMaps.size() > 0) {
+    dstMaterial.hasNormalMap = true;
+    textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+  }
 
-  // 4. height maps
-  std::vector<TextureData> heightMaps = loadMaterialTextures(
-      material, aiTextureType_AMBIENT, TextureType::HEIGHT);
+  // 4. displacement maps
+  //  std::vector<TextureData> normalMaps = loadMaterialTextures(
+  //      material, aiTextureType_DISPLACEMENT, TextureType::HEIGHT);
+  //  if (normalMaps.size() > 0) {
+  //    dstMaterial.hasDepthMap = true;
+  //    textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+  //  }
 
   aiColor3D color(0.0f, 0.0f, 0.0f);
 
@@ -190,10 +208,10 @@ unsigned int Model::TextureFromFile(const char *path,
       internalFormat = GL_RED;
     } else if (nrComponents == 3) {
       format = GL_RGB;
-      internalFormat = isDiffuse ? GL_SRGB : GL_RGB;
+      internalFormat = isDiffuse ? GL_SRGB : GL_RGB16F;
     } else if (nrComponents == 4) {
       format = GL_RGBA;
-      internalFormat = isDiffuse ? GL_SRGB_ALPHA : GL_RGB;
+      internalFormat = isDiffuse ? GL_SRGB_ALPHA : GL_RGBA16F;
     }
 
     glBindTexture(GL_TEXTURE_2D, textureID);

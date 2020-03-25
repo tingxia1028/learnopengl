@@ -46,6 +46,13 @@ void PointLight::genShadowMap() {
   glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMapTex, 0);
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
+
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    std::cout << "Error loading the pointLight Depth Framebuffer" << std::endl;
+    return;
+  }
+
+  // unbind
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
@@ -82,8 +89,6 @@ void PointLight::configureShadowMatrices(ShaderProgram &shaderProgram) {
     shaderProgram.uniformSetMat4("shadowMatrices[" + std::to_string(i) + "]",
                                  shadowTransforms[i]);
   }
-  glm::vec3 point(110.0, 20.0, 96.0);
-  glm::vec4 result = shadowTransforms[0] * glm::vec4(point, 1.0f);
 
   shaderProgram.uniformSetFloat("far", farPlane);
   shaderProgram.uniformSetVec3F("lightPos", position);

@@ -6,6 +6,7 @@ in VS_OUT{
     vec3 Normal;
     vec3 FragPos;
     vec2 TexCoords;
+    mat3 TBN;
 } fs_in;
 
 struct DirectLight{
@@ -26,7 +27,7 @@ struct PointLight{
     float linear;
     float quadratic;
     float farPlane;
-    samplerCube shadowMap;
+//    samplerCube shadowMap;
 };
 
 struct SpotLight{
@@ -41,7 +42,7 @@ struct SpotLight{
     float cutoff;
     float outCutoff;
     float farPlane;
-    samplerCube shadowMap;
+//    samplerCube shadowMap;
 };
 
 struct Material{
@@ -50,13 +51,17 @@ struct Material{
     float shininess;
     bool hasDiffuseTex;
     bool hasSpecularTex;
+    bool hasNormalMap;
+    bool hasDepthMap;
     sampler2D diffuse;
     sampler2D specular;
+    sampler2D normal;
+    sampler2D depth;
 };
 
-#define DIRCECT_LIGHTS 3
-#define POINT_LIGHTS 3
-#define SPOT_LIGHTS 3
+#define DIRCECT_LIGHTS 2
+#define POINT_LIGHTS 2
+#define SPOT_LIGHTS 2
 #define MATERIALS 1
 uniform int dirNum;
 uniform int pointNum;
@@ -79,39 +84,55 @@ vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
 vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
 vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
+const float heightScale = 0.1;
+const float minLayers = 8;
+const float maxLayers = 32;
 
 vec3 CaculateDirectLight(DirectLight light, vec3 normal, vec3 viewDir, vec3 diffuseSampler, vec3 specularSampler, vec4 FragPosLightSpace);
 vec3 CaculatePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 diffuseSampler, vec3 specularSampler);
 vec3 CaculateSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 diffuseSampler, vec3 specularSampler);
 float directShadowCalculation(vec4 fragPosLightSpace, sampler2D shadowMap, float bias);
 float pointShadowCalculation(vec3 fragPos, vec3 lightPos, float farPlane, samplerCube shadowMap);
+vec2 ParallaxMapping(Material material, vec2 texCoords, vec3 viewDir);
 
 void main()
 {
     vec3 resultColor = vec3(0.0f);
-    vec3 norm = normalize(fs_in.Normal);
+    vec3 norm = fs_in.Normal;
+    if(materials[0].hasNormalMap){
+        norm = texture(materials[0].normal, fs_in.TexCoords).rgb;
+        norm = normalize(norm * 2.0 - 1.0);
+        norm = normalize(fs_in.TBN * norm);
+    }else{
+         norm = normalize(fs_in.Normal);
+    }
     vec3 viewDir = normalize(viewPos - fs_in.FragPos);
+    vec3 tangentViewDir = normalize(fs_in.TBN * viewPos - fs_in.TBN * fs_in.FragPos);
+    vec2 texCoord;
+    if(materials[0].hasDepthMap){
+        texCoord = ParallaxMapping(materials[0], fs_in.TexCoords, tangentViewDir);
+        if(texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
+            discard;
+    }else{
+        texCoord = fs_in.TexCoords;
+    }
+
     vec3 diffuseSampler;
     if(materials[0].hasDiffuseTex){
-        vec4 diffuseTex = texture(materials[0].diffuse, fs_in.TexCoords);
-        if(diffuseTex.a<0.5){
-            discard;
-        }
+        vec4 diffuseTex = texture(materials[0].diffuse, texCoord);
         diffuseSampler = vec3(diffuseTex);
     }else{
         diffuseSampler = materials[0].diffuseColor;
     }
     vec3 specularSampler;
     if(materials[0].hasSpecularTex){
-        specularSampler = vec3(texture(materials[0].specular, fs_in.TexCoords));
+        specularSampler = vec3(texture(materials[0].specular, texCoord));
     }else{
         specularSampler = materials[0].specularColor;
     }
 
-    vec4 FragPosLightSpace;
-    float shadow;
     for(int i = 0; i< dirNum; ++i){
-        FragPosLightSpace = directLights[i].lightSpaceTrans * vec4(fs_in.FragPos, 1.0);
+        vec4 FragPosLightSpace = directLights[i].lightSpaceTrans * vec4(fs_in.FragPos, 1.0);
         resultColor += CaculateDirectLight(directLights[i], norm, viewDir, diffuseSampler, specularSampler, FragPosLightSpace);
     }
     for(int i = 0; i< pointNum; ++i){
@@ -160,7 +181,8 @@ vec3 CaculatePointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 diffus
     diffuse *= attenuation;
     specular *= attenuation;
     // shadow
-    float shadow = pointShadowCalculation(fs_in.FragPos, light.position, light.farPlane, light.shadowMap);
+//    float shadow = pointShadowCalculation(fs_in.FragPos, light.position, light.farPlane, light.shadowMap);
+    float shadow = 0.0;
     return ambient + (1.0 - shadow) * (diffuse + specular);
 }
 
@@ -186,7 +208,8 @@ vec3 CaculateSpotLight(SpotLight light, vec3 normal, vec3 viewDir, vec3 diffuseS
     diffuse *= attenuation * intensity;
     specular *= attenuation * intensity;
     // shadow
-    float shadow = pointShadowCalculation(fs_in.FragPos, light.position, light.farPlane, light.shadowMap);
+//    float shadow = pointShadowCalculation(fs_in.FragPos, light.position, light.farPlane, light.shadowMap);
+    float shadow = 0.0;
     return ambient + (1.0 - shadow) * (diffuse + specular);
 }
 
@@ -223,4 +246,29 @@ float pointShadowCalculation(vec3 fragPos, vec3 lightPos, float farPlane, sample
     }
 
     return shadow/float(samples);
+}
+
+vec2 ParallaxMapping(Material material, vec2 texCoords, vec3 viewDir){
+    // linear interpolation: x*(1-level)+y*level
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    float layerDepth = 1.0 / numLayers;
+    float currentLayerDepth = 0.0;
+    vec2 p = viewDir.xy / viewDir.z * heightScale;
+    vec2 deltaTexCoords = p / numLayers;
+
+    // init
+    vec2 currentTexCoords = texCoords;
+    float currentDepthMapValue = texture(material.depth, currentTexCoords).r;
+    while(currentLayerDepth < currentDepthMapValue){
+        currentTexCoords -= deltaTexCoords;
+        currentDepthMapValue = texture(material.depth, currentTexCoords).r;
+        currentLayerDepth += layerDepth;
+    }
+
+    // interpolation
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    float afterDepth = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = texture(material.depth, prevTexCoords).r - currentLayerDepth + layerDepth;
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    return prevTexCoords * weight + currentTexCoords * (1.0-weight);
 }

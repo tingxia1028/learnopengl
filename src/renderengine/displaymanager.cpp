@@ -87,6 +87,13 @@ void DisplayManager::processInput(GLFWwindow *window, float deltaTime) {
     glReadPixels(viewPort[0], viewPort[1], viewPort[2], viewPort[3], GL_RGB,
                  GL_UNSIGNED_BYTE, colorArr);
     std::string outputFile("../output/temp.png");
+  } else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+    if (camera->exposure > 0.001f)
+      camera->exposure -= 0.001f;
+    else
+      camera->exposure = 0.0f;
+  } else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+    camera->exposure += 0.001f;
   }
 }
 

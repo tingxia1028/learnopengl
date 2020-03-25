@@ -32,7 +32,7 @@ public:
   // for shadow map
   GLuint shadowMapFBO;
   GLuint depthMapTex;
-  int depthMapIndex;
+  int depthMapIndex = 0;
 
 private:
   virtual void genShadowMap() = 0;

@@ -93,5 +93,6 @@ void Camera::updateCameraData() {
   right = glm::normalize(glm::cross(front, worldUp));
   up = glm::normalize(glm::cross(right, front));
 }
+
 const glm::vec3 &Camera::getPosition() const { return position; }
 const glm::vec3 &Camera::getFront() const { return front; }

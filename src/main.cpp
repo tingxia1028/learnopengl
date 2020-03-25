@@ -3,12 +3,8 @@
 #endif
 
 #include "light/directionallight.h"
-#include "light/flashlight.h"
-#include "light/pointlight.h"
-#include "light/spotlight.h"
 #include "renderengine/displaymanager.h"
 #include "renderengine/render.h"
-#include "renderengine/shader.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -64,20 +60,19 @@ int main() {
   glm::vec3 ambientColor(0.2f, 0.2f, 0.2f);
   glm::vec3 diffuseColor(0.9f, 0.9f, 0.9f);
   glm::vec3 specularColor(1.0f, 1.0f, 1.0f);
-  //  DirectionalLight directionalLight(ambientColor, diffuseColor,
-  //  specularColor,
-  //                                    LightType ::DIRECT,
-  //                                    glm::vec3(-0.05f, -0.5f, 0.05f));
-  //  lights.push_back(&directionalLight);
+  DirectionalLight directionalLight(ambientColor, diffuseColor, specularColor,
+                                    LightType ::DIRECT,
+                                    glm::vec3(-0.05f, -0.5f, 0.05f));
+  lights.push_back(&directionalLight);
   //  DirectionalLight directionalLight1(ambientColor, diffuseColor,
   //  specularColor,
   //                                     LightType ::DIRECT,
-  //                                     glm::vec3(0.2f, 1.0f, -0.3f));
+  //                                     glm::vec3(-0.01f, 0.65f, -0.01f));
   //  lights.push_back(&directionalLight1);
-  PointLight pointLight(ambientColor, diffuseColor, specularColor,
-                        LightType ::POINT, glm::vec3(0.0f, -0.75f, 0.0f), 1.0f,
-                        0.09f, 0.032f);
-  lights.push_back(&pointLight);
+  //  PointLight pointLight(ambientColor, diffuseColor, specularColor,
+  //                        LightType ::POINT, glm::vec3(0.0f, -0.6f,
+  //                        0.0f), 1.0f, 0.09f, 0.032f);
+  //  lights.push_back(&pointLight);
 
   // skyBox
   std::vector<std::string> skyTexs{
@@ -87,6 +82,7 @@ int main() {
   SkyBox skyBox(skyTexs);
 
   Scene scene = Scene(models, &camera, lights, &skyBox);
+  scene.generateFBO(SCR_WIDTH, SCR_HEIGHT);
 
   /**
    * load shaders
@@ -133,6 +129,12 @@ int main() {
       {GL_FRAGMENT_SHADER, "../src/shaders/shadow/debugDepthFrag.shader"}};
   ShaderProgram debugShadowShader = ShaderProgram(debugShadowShaders);
 
+  // deferred shaders
+  std::vector<ShaderInfo> deferredShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/deferred/hdrVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/deferred/hdrFrag.shader"}};
+  ShaderProgram deferredShader = ShaderProgram(deferredShaders);
+
   /**
    * render loop
    */
@@ -158,21 +160,30 @@ int main() {
     //    modelShader.bindUniformBlock("Matrices", 0);
     //    Render::debugRenderShadowMap(scene, debugShadowShader);
 
+    // can use skyBoxShader to draw cube shadow map
+    //    skyBoxShader.use();
+    //    Render::prepare(&camera, displayManager);
+    //    Render::renderSkyBox(scene, skyBoxShader);
+
     modelShader.use();
     Render::prepare(&camera, displayManager);
     modelShader.bindUniformBlock("Matrices", 0);
-    Render::render(scene, modelShader, true, true, true);
+    //    Render::render(scene, modelShader, true, true, true);
+    Render::deferredRender(modelShader, scene);
+
+    deferredShader.use();
+    Render::renderQuad(deferredShader, scene);
 
     //    normalShader.use();
-    //    Render::render(scene, normalShader, false, false);
-
-    //    skyBoxShader.use();
-    //    Render::renderSkyBox(scene, skyBoxShader);
+    //    Render::render(scene, normalShader);
 
     //    simplestShader.use();
     //    for (Light *light : lights) {
-    //      renderScene(simplestShader, light->position);
+    //      Render::renderLight(simplestShader, light->position);
     //    }
+    //
+    //    skyBoxShader.use();
+    //    Render::renderSkyBox(scene, skyBoxShader);
 
     displayManager.afterward();
     // poll IO events, eg. mouse moved etc.
@@ -185,88 +196,4 @@ int main() {
   glfwTerminate();
 
   return 0;
-}
-
-void renderScene(ShaderProgram &shader, glm::vec3 &lightPos) {
-  // cubes
-  glm::mat4 model = glm::mat4(1.0f);
-  model = glm::mat4(1.0f);
-  model = glm::translate(model, lightPos);
-  model = glm::scale(model, glm::vec3(0.005f));
-  shader.uniformSetMat4("model", model);
-  renderCube();
-}
-
-unsigned int cubeVAO = 0;
-unsigned int cubeVBO = 0;
-void renderCube() {
-  // initialize (if necessary)
-  if (cubeVAO == 0) {
-    float vertices[] = {
-        // back face
-        -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-        1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,   // top-right
-        1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,  // bottom-right
-        1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,   // top-right
-        -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-        -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,  // top-left
-        // front face
-        -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-        1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,  // bottom-right
-        1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,   // top-right
-        1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,   // top-right
-        -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,  // top-left
-        -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-        // left face
-        -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-right
-        -1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f,  // top-left
-        -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-left
-        -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-left
-        -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  // bottom-right
-        -1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-right
-        // right face
-        1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-left
-        1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-right
-        1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,  // top-right
-        1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-right
-        1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-left
-        1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  // bottom-left
-        // bottom face
-        -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // top-right
-        1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,  // top-left
-        1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,   // bottom-left
-        1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,   // bottom-left
-        -1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,  // bottom-right
-        -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // top-right
-        // top face
-        -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
-        1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom-right
-        1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,  // top-right
-        1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom-right
-        -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
-        -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f   // bottom-left
-    };
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &cubeVBO);
-    // fill buffer
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    // link vertex attributes
-    glBindVertexArray(cubeVAO);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void *)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void *)(6 * sizeof(float)));
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-  }
-  // render Cube
-  glBindVertexArray(cubeVAO);
-  glDrawArrays(GL_TRIANGLES, 0, 36);
-  glBindVertexArray(0);
 }

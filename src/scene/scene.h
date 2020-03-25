@@ -14,11 +14,16 @@ public:
   Scene(std::vector<Model> &models, Camera *camera,
         std::vector<Light *> &lights, SkyBox *skyBox);
   void cleanUp();
+  void generateFBO(int scrWidth, int scrHeight);
 
   std::vector<Model> models;
   Camera *camera;
   std::vector<Light *> lights;
   SkyBox *skyBox;
+  GLuint deferredFBO;
+  GLuint deferredTex;
+  GLuint deferredRBO;
+  float exposure;
 };
 
 #endif // OPENGL_SCENE_H

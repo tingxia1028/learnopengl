@@ -24,8 +24,12 @@ public:
   glm::mat4 getProjectionMatrix(bool isPerspective);
   const glm::vec3 &getPosition() const;
   const glm::vec3 &getFront() const;
+  // hdr
+  float exposure = 1.0f;
 
 private:
+  void updateCameraData();
+
   // camera outside attributes
   glm::vec3 position;
   glm::vec3 front;
@@ -47,8 +51,6 @@ private:
   // camera move options
   float movementSpeed;
   float mouseSensitivity;
-
-  void updateCameraData();
 };
 
 #endif // OPENGL_CAMERA_H

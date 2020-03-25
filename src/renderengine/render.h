@@ -19,10 +19,18 @@ public:
                      bool withLights = false, bool withMaterials = false,
                      bool withShadowMap = false);
   static void renderSkyBox(Scene &scene, ShaderProgram &shaderProgram);
+  static void renderLight(ShaderProgram &shader, glm::vec3 &lightPos);
+  static void renderQuad(ShaderProgram &shader, Scene &scene);
+  static void deferredRender(ShaderProgram &shader, Scene &scene);
+  static GLuint cubeVAO;
+  static GLuint cubeVBO;
+  static GLuint quadVAO;
+  static GLuint quadVBO;
 
 private:
   static void configureLights(std::vector<Light *> &lights,
                               ShaderProgram &shaderProgram);
+  static void renderCube();
 };
 
 #endif // OPENGL_RENDER_H

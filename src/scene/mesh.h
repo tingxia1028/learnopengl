@@ -11,6 +11,8 @@ struct Vertex {
   glm::vec3 position;
   glm::vec3 normal;
   glm::vec2 textureCoord;
+  glm::vec3 tangent;
+  glm::vec3 bitangent;
 };
 
 constexpr unsigned int ATTRIBUTE_NUM = 3;
