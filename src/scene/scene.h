@@ -15,14 +15,17 @@ public:
         std::vector<Light *> &lights, SkyBox *skyBox);
   void cleanUp();
   void generateFBO(int scrWidth, int scrHeight);
+  void generateBlurFBO(int scrWidth, int scrHeight);
 
   std::vector<Model> models;
   Camera *camera;
   std::vector<Light *> lights;
   SkyBox *skyBox;
   GLuint deferredFBO;
-  GLuint deferredTex;
+  std::vector<GLuint> deferredTex;
   GLuint deferredRBO;
+  GLuint pingpongFBO[2];
+  GLuint pingpongColorBuffers[2];
 };
 
 #endif // OPENGL_SCENE_H

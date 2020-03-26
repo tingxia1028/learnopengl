@@ -121,13 +121,15 @@ void Render::renderSkyBox(Scene &scene, ShaderProgram &shaderProgram) {
   glDepthFunc(GL_LESS);
 }
 
-void Render::renderLight(ShaderProgram &shader, glm::vec3 &lightPos) {
+void Render::renderLight(ShaderProgram &shader, glm::vec3 &lightPos,
+                         glm::vec3 &diffuse) {
   // cubes
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::mat4(1.0f);
   model = glm::translate(model, lightPos);
   model = glm::scale(model, glm::vec3(0.005f));
   shader.uniformSetMat4("model", model);
+  shader.uniformSetVec3F("lightColor", diffuse);
   renderCube();
 }
 
@@ -209,12 +211,44 @@ void Render::renderCube() {
 GLuint Render::quadVAO = 0;
 GLuint Render::quadVBO = 0;
 
-void Render::renderQuad(ShaderProgram &shader, Scene &scene) {
+void Render::deferredRender(ShaderProgram &shader, Scene &scene) {
+  std::vector<GLuint> deferredTex = scene.deferredTex;
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, scene.deferredTex);
+  glBindTexture(GL_TEXTURE_2D, scene.deferredTex[0]);
   shader.uniformSetInt("deferredTex", 0);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, scene.pingpongColorBuffers[0]);
+  shader.uniformSetInt("bloomBlur", 1);
+
   shader.uniformSetBool("isHdr", true);
+  shader.uniformSetBool("isBloom", true);
   shader.uniformSetFloat("exposure", scene.camera->exposure);
+  renderQuad();
+  std::cout << "renderQuad:" << glGetError() << std::endl;
+}
+
+void Render::renderBlur(ShaderProgram &shader, Scene &scene) {
+  bool horizontal = true, firstIter = true;
+  unsigned int amount = 10;
+  for (unsigned int i = 0; i < amount; ++i) {
+    glBindFramebuffer(GL_FRAMEBUFFER, scene.pingpongFBO[horizontal]);
+    shader.uniformSetBool("horizontal", horizontal);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, firstIter
+                                     ? scene.deferredTex[1]
+                                     : scene.pingpongColorBuffers[!horizontal]);
+    shader.uniformSetInt("image", 0);
+    renderQuad();
+    horizontal = !horizontal;
+    if (firstIter) {
+      firstIter = false;
+    }
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  std::cout << "renderBlur:" << glGetError() << std::endl;
+}
+
+void Render::renderQuad() {
   if (quadVAO == 0) {
     float quadVertices[] = {
         -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -236,5 +270,4 @@ void Render::renderQuad(ShaderProgram &shader, Scene &scene) {
   glBindVertexArray(quadVAO);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   glBindVertexArray(0);
-  std::cout << "renderQuad:" << glGetError() << std::endl;
 }

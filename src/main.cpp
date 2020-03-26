@@ -54,17 +54,16 @@ int main() {
   // lights
   std::vector<Light *> lights;
   glm::vec3 ambientColor(0.2f, 0.2f, 0.2f);
-  glm::vec3 diffuseColor(0.9f, 0.9f, 0.9f);
+  glm::vec3 diffuseColor(2.0f, 2.0f, 2.0f);
   glm::vec3 specularColor(1.0f, 1.0f, 1.0f);
   DirectionalLight directionalLight(ambientColor, diffuseColor, specularColor,
                                     LightType ::DIRECT,
                                     glm::vec3(-0.05f, -0.5f, 0.05f));
   lights.push_back(&directionalLight);
-  //  DirectionalLight directionalLight1(ambientColor, diffuseColor,
-  //  specularColor,
-  //                                     LightType ::DIRECT,
-  //                                     glm::vec3(-0.01f, 0.65f, -0.01f));
-  //  lights.push_back(&directionalLight1);
+  DirectionalLight directionalLight1(ambientColor, diffuseColor, specularColor,
+                                     LightType ::DIRECT,
+                                     glm::vec3(-0.01f, 0.65f, -0.01f));
+  lights.push_back(&directionalLight1);
   //  PointLight pointLight(ambientColor, diffuseColor, specularColor,
   //                        LightType ::POINT, glm::vec3(0.0f, -0.6f,
   //                        0.0f), 1.0f, 0.09f, 0.032f);
@@ -79,6 +78,7 @@ int main() {
 
   Scene scene = Scene(models, &camera, lights, &skyBox);
   scene.generateFBO(SCR_WIDTH, SCR_HEIGHT);
+  scene.generateBlurFBO(SCR_WIDTH, SCR_HEIGHT);
 
   /**
    * load shaders
@@ -131,6 +131,12 @@ int main() {
       {GL_FRAGMENT_SHADER, "../src/shaders/deferred/hdrFrag.shader"}};
   ShaderProgram deferredShader = ShaderProgram(deferredShaders);
 
+  // blur shaders
+  std::vector<ShaderInfo> blurShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/blur/blurVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/blur/blurFrag.shader"}};
+  ShaderProgram blurShader = ShaderProgram(blurShaders);
+
   /**
    * render loop
    */
@@ -169,17 +175,20 @@ int main() {
 
     simplestShader.use();
     for (Light *light : lights) {
-      Render::renderLight(simplestShader, light->position);
+      Render::renderLight(simplestShader, light->position, light->diffuse);
     }
 
     skyBoxShader.use();
     Render::renderSkyBox(scene, skyBoxShader);
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // blur
+    blurShader.use();
+    Render::renderBlur(blurShader, scene);
 
     deferredShader.use();
     Render::prepare(nullptr, displayManager);
-    Render::renderQuad(deferredShader, scene);
+    Render::deferredRender(deferredShader, scene);
 
     //    normalShader.use();
     //    Render::render(scene, normalShader);
