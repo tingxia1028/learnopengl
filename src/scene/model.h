@@ -24,18 +24,15 @@ public:
 
   std::vector<Mesh> meshes;
   Transformation transformation;
-  std::map<std::string, TextureData> loadedTextures;
+  std::map<std::string, Texture> loadedTextures;
   std::string directory;
 
 private:
   void loadModel(const std::string &path);
   void processNode(aiNode *node, const aiScene *scene);
   Mesh processMesh(aiMesh *mesh, const aiScene *scene);
-  std::vector<TextureData> loadMaterialTextures(aiMaterial *mat,
-                                                aiTextureType type,
-                                                TextureType typeName);
-  unsigned int TextureFromFile(const char *path, const std::string &directory,
-                               bool isDiffuse);
+  std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type,
+                                            Texture::TextureType typeName);
   glm::vec3 transformAIcolor(aiColor3D aiColor3D);
 };
 

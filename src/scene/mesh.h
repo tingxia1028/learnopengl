@@ -19,6 +19,9 @@ constexpr unsigned int ATTRIBUTE_NUM = 3;
 
 class Mesh {
 public:
+  Mesh() = default;
+  ~Mesh() = default;
+  void cleanUp();
   Mesh(std::string name, const std::vector<Vertex> &vertices,
        const std::vector<unsigned int> &indices,
        const std::vector<Material> &materials);

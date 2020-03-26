@@ -167,7 +167,7 @@ int main() {
     //    Render::prepare(&camera, displayManager);
     //    Render::renderSkyBox(scene, skyBoxShader);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, scene.deferredFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, scene.gBuffer);
     modelShader.use();
     Render::prepare(&camera, displayManager);
     modelShader.bindUniformBlock("Matrices", 0);

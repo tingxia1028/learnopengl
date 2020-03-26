@@ -21,7 +21,7 @@ public:
   Camera *camera;
   std::vector<Light *> lights;
   SkyBox *skyBox;
-  GLuint deferredFBO;
+  GLuint gBuffer;
   std::vector<GLuint> deferredTex;
   GLuint deferredRBO;
   GLuint pingpongFBO[2];

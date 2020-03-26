@@ -2,7 +2,7 @@
 #include "material.h"
 
 Material::Material(const glm::vec3 &diffuse, const glm::vec3 &specular,
-                   float shininess, const std::vector<TextureData> &textures)
+                   float shininess, const std::vector<Texture> &textures)
     : diffuse(diffuse), specular(specular), shininess(shininess),
       textures(textures) {}
 
@@ -24,11 +24,9 @@ void Material::configure(ShaderProgram &shaderProgram, int materialIndex,
   shaderProgram.uniformSetBool("materials[" + index + "].hasDepthMap",
                                hasDepthMap);
   for (unsigned int k = 0; k < textures.size(); ++k, ++textureIndex) {
-    glActiveTexture(GL_TEXTURE0 + textureIndex);
-    TextureData textureData = textures[k];
-    shaderProgram.uniformSetInt("materials[" + index + "]." +
-                                    TexTypeToString(textureData.type),
-                                textureIndex);
-    glBindTexture(GL_TEXTURE_2D, textureData.textureID);
+    Texture texture = textures[k];
+    texture.bind(GL_TEXTURE0 + textureIndex);
+    shaderProgram.uniformSetInt(
+        "materials[" + index + "]." + texture.TexTypeToString(), textureIndex);
   }
 }

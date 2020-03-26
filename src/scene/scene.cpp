@@ -9,23 +9,21 @@ Scene::Scene(std::vector<Model> &models, Camera *camera,
 
 void Scene::cleanUp() {
   for (unsigned int i = 0; i < models.size(); ++i) {
-    std::map<std::string, TextureData> maps = models[i].loadedTextures;
-    for (std::map<std::string, TextureData>::iterator it = maps.begin();
+    std::map<std::string, Texture> maps = models[i].loadedTextures;
+    for (std::map<std::string, Texture>::iterator it = maps.begin();
          it != maps.end(); ++it) {
-      glDeleteTextures(1, &it->second.textureID);
+      it->second.cleanUp();
     }
     for (Mesh &mesh : models[i].meshes) {
-      glDeleteVertexArrays(1, &mesh.VAO);
-      glDeleteBuffers(1, &mesh.VBO);
-      glDeleteBuffers(1, &mesh.EBO);
+      mesh.cleanUp();
     }
   }
 }
 
 void Scene::generateFBO(int scrWidth, int scrHeight) {
   // FBO
-  glGenFramebuffers(1, &deferredFBO);
-  glBindFramebuffer(GL_FRAMEBUFFER, deferredFBO);
+  glGenFramebuffers(1, &gBuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 
   // floating point color buffer
   deferredTex = std::vector<GLuint>(2, 0);
@@ -34,8 +32,8 @@ void Scene::generateFBO(int scrWidth, int scrHeight) {
     glBindTexture(GL_TEXTURE_2D, deferredTex[i]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scrWidth, scrHeight, 0, GL_RGBA,
                  GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
@@ -66,7 +64,7 @@ void Scene::generateBlurFBO(int scrWidth, int scrHeight) {
   for (int i = 0; i < 2; ++i) {
     glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
     glBindTexture(GL_TEXTURE_2D, pingpongColorBuffers[i]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scrWidth, scrHeight, 0, GL_RGBA,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, scrWidth, scrHeight, 0, GL_RGB,
                  GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

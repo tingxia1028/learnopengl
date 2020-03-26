@@ -101,34 +101,34 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
   // process materials
   aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
   Material dstMaterial = Material();
-  std::vector<TextureData> &textures = dstMaterial.textures;
+  std::vector<Texture> &textures = dstMaterial.textures;
 
   // 1. diffuse maps
-  std::vector<TextureData> diffuseMaps = loadMaterialTextures(
-      material, aiTextureType_DIFFUSE, TextureType::DIFFUSE);
+  std::vector<Texture> diffuseMaps = loadMaterialTextures(
+      material, aiTextureType_DIFFUSE, Texture::TextureType::DIFFUSE);
   if (diffuseMaps.size() > 0) {
     dstMaterial.hasDiffuseTex = true;
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
   }
 
   // 2. specular maps
-  std::vector<TextureData> specularMaps = loadMaterialTextures(
-      material, aiTextureType_SPECULAR, TextureType::SPECULAR);
+  std::vector<Texture> specularMaps = loadMaterialTextures(
+      material, aiTextureType_SPECULAR, Texture::TextureType::SPECULAR);
   if (specularMaps.size() > 0) {
     dstMaterial.hasSpecularTex = true;
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
   }
 
   // 3. normal maps
-  std::vector<TextureData> normalMaps =
-      loadMaterialTextures(material, aiTextureType_HEIGHT, TextureType::NORMAL);
+  std::vector<Texture> normalMaps = loadMaterialTextures(
+      material, aiTextureType_HEIGHT, Texture::TextureType::NORMAL);
   if (normalMaps.size() > 0) {
     dstMaterial.hasNormalMap = true;
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
   }
 
   // 4. displacement maps
-  //  std::vector<TextureData> normalMaps = loadMaterialTextures(
+  //  std::vector<Texture> normalMaps = loadMaterialTextures(
   //      material, aiTextureType_DISPLACEMENT, TextureType::HEIGHT);
   //  if (normalMaps.size() > 0) {
   //    dstMaterial.hasDepthMap = true;
@@ -161,11 +161,11 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 
 // checks all material textures of a given type and loads the textures if
 // they're not loaded yet. the required info is returned as a Texture struct.
-std::vector<TextureData> Model::loadMaterialTextures(aiMaterial *mat,
-                                                     aiTextureType type,
-                                                     TextureType typeName) {
+std::vector<Texture>
+Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type,
+                            Texture::TextureType typeName) {
 
-  std::vector<TextureData> textures;
+  std::vector<Texture> textures;
   for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
     aiString str;
     mat->GetTexture(type, i, &str);
@@ -174,11 +174,9 @@ std::vector<TextureData> Model::loadMaterialTextures(aiMaterial *mat,
 
     if (loadedTextures.count(str.C_Str()) <=
         0) { // if texture hasn't been loaded already, load it
-      TextureData texture;
-      texture.textureID =
-          TextureFromFile(str.C_Str(), this->directory, typeName == DIFFUSE);
-      texture.type = typeName;
-      texture.texturePath = str.C_Str();
+      std::string filename = directory + '/' + std::string(str.C_Str());
+      Texture texture(GL_TEXTURE_2D, filename, typeName);
+      texture.load();
       textures.push_back(texture);
       loadedTextures[str.C_Str()] = texture;
     } else {
@@ -186,53 +184,6 @@ std::vector<TextureData> Model::loadMaterialTextures(aiMaterial *mat,
     }
   }
   return textures;
-}
-
-unsigned int Model::TextureFromFile(const char *path,
-                                    const std::string &directory,
-                                    bool isDiffuse) {
-  std::string filename = std::string(path);
-  filename = directory + '/' + filename;
-
-  unsigned int textureID;
-  glGenTextures(1, &textureID);
-
-  int width, height, nrComponents;
-  unsigned char *data =
-      stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-  if (data) {
-    GLenum format;
-    GLenum internalFormat;
-    if (nrComponents == 1) {
-      format = GL_RED;
-      internalFormat = GL_RED;
-    } else if (nrComponents == 3) {
-      format = GL_RGB;
-      internalFormat = isDiffuse ? GL_SRGB : GL_RGB16F;
-    } else if (nrComponents == 4) {
-      format = GL_RGBA;
-      internalFormat = isDiffuse ? GL_SRGB_ALPHA : GL_RGBA16F;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format,
-                 GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    stbi_image_free(data);
-    glBindTexture(GL_TEXTURE_2D, 0);
-  } else {
-    std::cout << "Texture failed to load at path: " << path << std::endl;
-    stbi_image_free(data);
-  }
-
-  return textureID;
 }
 
 glm::vec3 Model::transformAIcolor(aiColor3D aiColor3D) {
