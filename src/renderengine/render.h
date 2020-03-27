@@ -23,6 +23,8 @@ public:
                           glm::vec3 &diffuse);
   static void deferredRender(ShaderProgram &shader, Scene &scene);
   static void renderBlur(ShaderProgram &shader, Scene &scene);
+  static void renderGBuffer(ShaderProgram &shaderProgram, Scene &scene);
+  static void renderLightPass(ShaderProgram &shaderProgram, Scene &scene);
   static GLuint cubeVAO;
   static GLuint cubeVBO;
   static GLuint quadVAO;

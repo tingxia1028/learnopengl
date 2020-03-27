@@ -4,6 +4,7 @@
 
 #include "../camera/camera.h"
 #include "../light/light.h"
+#include "../renderengine/gbuffer.h"
 #include "model.h"
 #include "skybox.h"
 #include <glad/glad.h>
@@ -21,7 +22,8 @@ public:
   Camera *camera;
   std::vector<Light *> lights;
   SkyBox *skyBox;
-  GLuint gBuffer;
+  GBuffer gBuffer;
+  GLuint deferredFBO;
   std::vector<GLuint> deferredTex;
   GLuint deferredRBO;
   GLuint pingpongFBO[2];

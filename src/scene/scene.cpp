@@ -17,13 +17,14 @@ void Scene::cleanUp() {
     for (Mesh &mesh : models[i].meshes) {
       mesh.cleanUp();
     }
+    gBuffer.cleanUp();
   }
 }
 
 void Scene::generateFBO(int scrWidth, int scrHeight) {
   // FBO
-  glGenFramebuffers(1, &gBuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+  glGenFramebuffers(1, &deferredFBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, deferredFBO);
 
   // floating point color buffer
   deferredTex = std::vector<GLuint>(2, 0);

@@ -1,5 +1,6 @@
 
 #include "gbuffer.h"
+#include "shader.h"
 #include <iostream>
 
 GBuffer::GBuffer() {
@@ -7,12 +8,12 @@ GBuffer::GBuffer() {
   depthRBO = 0;
 }
 
-GBuffer::~GBuffer() {
+void GBuffer::cleanUp() {
   if (FBO != 0) {
     glDeleteFramebuffers(1, &FBO);
   }
-  if (textures.size() > 0) {
-    for (GBufferTexture texture : textures) {
+  if (gTextures.size() > 0) {
+    for (GBufferTexture texture : gTextures) {
       glDeleteTextures(1, &texture.textureID);
     }
   }
@@ -30,25 +31,32 @@ bool GBuffer::init(int scrWidth, int scrHeight,
   int size = textures.size();
   unsigned int attachments[size];
   for (unsigned int i = 0; i < size; ++i) {
-    GBufferTexture texture = textures[i];
+    GBufferTexture &texture = textures[i];
     glGenTextures(1, &texture.textureID);
     glBindTexture(GL_TEXTURE_2D, texture.textureID);
     switch (texture.type) {
     case GBUFFER_TEXTURE_TYPE_POSITION:
-    case GBUFFER_TEXTRURE_NORMAL: {
+    case GBUFFER_TEXTRURE_NORMAL:
+    case GBUFFER_TEXTURE_DIFFUSE:
+    case GBUFFER_TEXTURE_TEXCOORDS: {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, scrWidth, scrHeight, 0, GL_RGB,
                    GL_FLOAT, NULL);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+      break;
+    }
+    case GBUFFER_TEXTURE_SPECULAR_SHININESS: {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scrWidth, scrHeight, 0,
+                   GL_RGBA, GL_FLOAT, NULL);
       break;
     }
     }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
                            GL_TEXTURE_2D, texture.textureID, 0);
     attachments[i] = GL_COLOR_ATTACHMENT0 + i;
   }
   glDrawBuffers(size, attachments);
+  gTextures = textures;
 
   // Depth RBO
   if (needDepthRBO) {
@@ -68,4 +76,17 @@ bool GBuffer::init(int scrWidth, int scrHeight,
   return true;
 }
 
-bool GBuffer::bind() { glBindFramebuffer(GL_FRAMEBUFFER, FBO); }
+void GBuffer::bind() { glBindFramebuffer(GL_FRAMEBUFFER, FBO); }
+
+void GBuffer::bindForRead() { glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO); }
+
+void GBuffer::bindForWrite() { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBO); }
+
+void GBuffer::configure(ShaderProgram &shaderProgram) {
+  for (unsigned int i = 0; i < gTextures.size(); ++i) {
+    GBufferTexture gBufferTexture = gTextures[i];
+    glActiveTexture(GL_TEXTURE0 + i);
+    glBindTexture(GL_TEXTURE_2D, gBufferTexture.textureID);
+    shaderProgram.uniformSetInt(gBufferTexture.uniformName, i);
+  }
+}

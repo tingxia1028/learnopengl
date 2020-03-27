@@ -77,6 +77,12 @@ int main() {
   SkyBox skyBox(skyTexs);
 
   Scene scene = Scene(models, &camera, lights, &skyBox);
+  std::vector<GBufferTexture> gBufferTexs{
+      {GBUFFER_TEXTURE_TYPE_POSITION, "gPosition"},
+      {GBUFFER_TEXTRURE_NORMAL, "gNormal"},
+      {GBUFFER_TEXTURE_TEXCOORDS, "gDiffuse"},
+      {GBUFFER_TEXTURE_SPECULAR_SHININESS, "gSpecularShininess"}};
+  scene.gBuffer.init(SCR_WIDTH, SCR_WIDTH, gBufferTexs, true);
   scene.generateFBO(SCR_WIDTH, SCR_HEIGHT);
   scene.generateBlurFBO(SCR_WIDTH, SCR_HEIGHT);
 
@@ -127,8 +133,8 @@ int main() {
 
   // deferred shaders
   std::vector<ShaderInfo> deferredShaders{
-      {GL_VERTEX_SHADER, "../src/shaders/deferred/hdrVertex.shader"},
-      {GL_FRAGMENT_SHADER, "../src/shaders/deferred/hdrFrag.shader"}};
+      {GL_VERTEX_SHADER, "../src/shaders/hdr/hdrVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/hdr/hdrFrag.shader"}};
   ShaderProgram deferredShader = ShaderProgram(deferredShaders);
 
   // blur shaders
@@ -137,6 +143,18 @@ int main() {
       {GL_FRAGMENT_SHADER, "../src/shaders/blur/blurFrag.shader"}};
   ShaderProgram blurShader = ShaderProgram(blurShaders);
 
+  // geometry pass: render scene's geometry/color data into gbuffer
+  std::vector<ShaderInfo> gbufferShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/gbuffer/gbufferVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/gbuffer/gbufferFrag.shader"}};
+  ShaderProgram gbufferShader = ShaderProgram(gbufferShaders);
+
+  // geometry pass: render scene's geometry/color data into gbuffer
+  std::vector<ShaderInfo> lightpassShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/gbuffer/lightpassVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/gbuffer/lightpassFrag.shader"}};
+  ShaderProgram lightpassShader = ShaderProgram(lightpassShaders);
+#endif
   /**
    * render loop
    */
@@ -144,18 +162,40 @@ int main() {
 
     displayManager.interactionCallback();
 
-    directShadowShader.use();
-    Render::prepare(nullptr, displayManager);
-    std::set<LightType> directSet;
-    directSet.insert(DIRECT);
-    Render::renderShadowMap(scene, directShadowShader, directSet);
+    // geometry pass
+    gbufferShader.use();
+    Render::prepare(&camera, displayManager);
+    Render::renderGBuffer(gbufferShader, scene);
 
-    pointShadowShader.use();
-    Render::prepare(nullptr, displayManager);
-    std::set<LightType> pointSet;
-    pointSet.insert(POINT);
-    pointSet.insert(SPOT);
-    Render::renderShadowMap(scene, pointShadowShader, pointSet);
+    // light pass
+    lightpassShader.use();
+    Render::renderLightPass(lightpassShader, scene);
+
+    // copy geometry's depth buffer to default framebuffer
+    scene.gBuffer.bindForRead();
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT,
+                      GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // light cubes
+    simplestShader.use();
+    for (Light *light : lights) {
+      Render::renderLight(simplestShader, light->position, light->diffuse);
+    }
+
+    //    directShadowShader.use();
+    //    Render::prepare(nullptr, displayManager);
+    //    std::set<LightType> directSet;
+    //    directSet.insert(DIRECT);
+    //    Render::renderShadowMap(scene, directShadowShader, directSet);
+    //
+    //    pointShadowShader.use();
+    //    Render::prepare(nullptr, displayManager);
+    //    std::set<LightType> pointSet;
+    //    pointSet.insert(POINT);
+    //    pointSet.insert(SPOT);
+    //    Render::renderShadowMap(scene, pointShadowShader, pointSet);
 
     //    debugShadowShader.use();
     //    Render::prepare(&camera, displayManager);
@@ -167,28 +207,29 @@ int main() {
     //    Render::prepare(&camera, displayManager);
     //    Render::renderSkyBox(scene, skyBoxShader);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, scene.gBuffer);
-    modelShader.use();
-    Render::prepare(&camera, displayManager);
-    modelShader.bindUniformBlock("Matrices", 0);
-    Render::render(scene, modelShader, true, true, true);
-
-    simplestShader.use();
-    for (Light *light : lights) {
-      Render::renderLight(simplestShader, light->position, light->diffuse);
-    }
-
-    skyBoxShader.use();
-    Render::renderSkyBox(scene, skyBoxShader);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // blur
-    blurShader.use();
-    Render::renderBlur(blurShader, scene);
-
-    deferredShader.use();
-    Render::prepare(nullptr, displayManager);
-    Render::deferredRender(deferredShader, scene);
+    //    glBindFramebuffer(GL_FRAMEBUFFER, scene.deferredFBO);
+    //    modelShader.use();
+    //    Render::prepare(&camera, displayManager);
+    //    modelShader.bindUniformBlock("Matrices", 0);
+    //    Render::render(scene, modelShader, true, true, true);
+    //
+    //    simplestShader.use();
+    //    for (Light *light : lights) {
+    //      Render::renderLight(simplestShader, light->position,
+    //      light->diffuse);
+    //    }
+    //
+    //    skyBoxShader.use();
+    //    Render::renderSkyBox(scene, skyBoxShader);
+    //    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //
+    //    // blur
+    //    blurShader.use();
+    //    Render::renderBlur(blurShader, scene);
+    //
+    //    deferredShader.use();
+    //    Render::prepare(nullptr, displayManager);
+    //    Render::deferredRender(deferredShader, scene);
 
     //    normalShader.use();
     //    Render::render(scene, normalShader);

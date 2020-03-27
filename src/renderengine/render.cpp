@@ -271,3 +271,20 @@ void Render::renderQuad() {
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   glBindVertexArray(0);
 }
+
+void Render::renderGBuffer(ShaderProgram &shaderProgram, Scene &scene) {
+  scene.gBuffer.bind();
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  render(scene, shaderProgram, false, true, false);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  std::cout << "renderGBuffer:" << glGetError() << std::endl;
+}
+
+void Render::renderLightPass(ShaderProgram &shaderProgram, Scene &scene) {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  shaderProgram.uniformSetVec3F("viewPos", scene.camera->getPosition());
+  scene.gBuffer.configure(shaderProgram);
+  configureLights(scene.lights, shaderProgram);
+  renderQuad();
+  std::cout << "renderLightPass:" << glGetError() << std::endl;
+}
