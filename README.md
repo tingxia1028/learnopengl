@@ -1,4 +1,4 @@
-# learn opengl
+# opengl
 
 ## 蹒跚学步
 ### 绘制三角形
