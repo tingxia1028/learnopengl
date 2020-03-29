@@ -239,7 +239,7 @@ takes as input a set of vertices that form a single primitive e.g. a point or a 
 ### normal mapping
    not flat surface -> normals per fragment -> texture2D to store, color r,g,b represents x,y,z
    -  tangent space
-<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/normalmap.png" alt="normalmap" width="300" height="300" />
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/normalmap.png" alt="normalmap" width="300" height="200" />
 
 ### parallax mapping
 two way to realize:
