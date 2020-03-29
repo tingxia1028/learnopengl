@@ -7,7 +7,7 @@
 #include <set>
 
 void Render::prepare(Camera *camera, DisplayManager &displayManager) {
-  glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
   // uniform buffer object
@@ -281,10 +281,14 @@ void Render::renderGBuffer(ShaderProgram &shaderProgram, Scene &scene) {
 }
 
 void Render::renderLightPass(ShaderProgram &shaderProgram, Scene &scene) {
+  glDisable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   shaderProgram.uniformSetVec3F("viewPos", scene.camera->getPosition());
   scene.gBuffer.configure(shaderProgram);
   configureLights(scene.lights, shaderProgram);
   renderQuad();
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glEnable(GL_DEPTH_TEST);
   std::cout << "renderLightPass:" << glGetError() << std::endl;
 }

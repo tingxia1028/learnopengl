@@ -29,7 +29,7 @@ bool GBuffer::init(int scrWidth, int scrHeight,
   glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
   int size = textures.size();
-  unsigned int attachments[size];
+  std::vector<unsigned int> attachments(size);
   for (unsigned int i = 0; i < size; ++i) {
     GBufferTexture &texture = textures[i];
     glGenTextures(1, &texture.textureID);
@@ -37,15 +37,14 @@ bool GBuffer::init(int scrWidth, int scrHeight,
     switch (texture.type) {
     case GBUFFER_TEXTURE_TYPE_POSITION:
     case GBUFFER_TEXTRURE_NORMAL:
-    case GBUFFER_TEXTURE_DIFFUSE:
-    case GBUFFER_TEXTURE_TEXCOORDS: {
+    case GBUFFER_TEXTURE_DIFFUSE: {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, scrWidth, scrHeight, 0, GL_RGB,
                    GL_FLOAT, NULL);
       break;
     }
     case GBUFFER_TEXTURE_SPECULAR_SHININESS: {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, scrWidth, scrHeight, 0,
-                   GL_RGBA, GL_FLOAT, NULL);
+                   GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
     }
     }
@@ -55,7 +54,7 @@ bool GBuffer::init(int scrWidth, int scrHeight,
                            GL_TEXTURE_2D, texture.textureID, 0);
     attachments[i] = GL_COLOR_ATTACHMENT0 + i;
   }
-  glDrawBuffers(size, attachments);
+  glDrawBuffers(size, &attachments[0]);
   gTextures = textures;
 
   // Depth RBO

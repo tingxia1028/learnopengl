@@ -8,7 +8,6 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
 int SCR_WIDTH = 800;
@@ -36,8 +35,8 @@ int main() {
    */
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_STENCIL_TEST);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  //  glEnable(GL_BLEND);
+  //  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
   glEnable(GL_MULTISAMPLE);
@@ -47,23 +46,24 @@ int main() {
    */
   std::vector<Model> models;
   Transformation transformation(glm::vec3(0.0f, -0.75f, 0.0f),
-                                glm::vec3(0.0002f, 0.0002f, 0.0002f), nullptr);
+                                glm::vec3(0.0005f, 0.0005f, 0.0005f), nullptr);
   Model model("../resources/Sponza-master/sponza.obj", transformation);
   models.push_back(model);
 
   // lights
   std::vector<Light *> lights;
   glm::vec3 ambientColor(0.2f, 0.2f, 0.2f);
-  glm::vec3 diffuseColor(2.0f, 2.0f, 2.0f);
+  glm::vec3 diffuseColor(0.5f, 0.5f, 0.5f);
   glm::vec3 specularColor(1.0f, 1.0f, 1.0f);
   DirectionalLight directionalLight(ambientColor, diffuseColor, specularColor,
                                     LightType ::DIRECT,
                                     glm::vec3(-0.05f, -0.5f, 0.05f));
   lights.push_back(&directionalLight);
-  DirectionalLight directionalLight1(ambientColor, diffuseColor, specularColor,
-                                     LightType ::DIRECT,
-                                     glm::vec3(-0.01f, 0.65f, -0.01f));
-  lights.push_back(&directionalLight1);
+  //  DirectionalLight directionalLight1(ambientColor, diffuseColor,
+  //  specularColor,
+  //                                     LightType ::DIRECT,
+  //                                     glm::vec3(-0.01f, 0.65f, -0.01f));
+  //  lights.push_back(&directionalLight1);
   //  PointLight pointLight(ambientColor, diffuseColor, specularColor,
   //                        LightType ::POINT, glm::vec3(0.0f, -0.6f,
   //                        0.0f), 1.0f, 0.09f, 0.032f);
@@ -80,9 +80,9 @@ int main() {
   std::vector<GBufferTexture> gBufferTexs{
       {GBUFFER_TEXTURE_TYPE_POSITION, "gPosition"},
       {GBUFFER_TEXTRURE_NORMAL, "gNormal"},
-      {GBUFFER_TEXTURE_TEXCOORDS, "gDiffuse"},
+      {GBUFFER_TEXTURE_DIFFUSE, "gDiffuse"},
       {GBUFFER_TEXTURE_SPECULAR_SHININESS, "gSpecularShininess"}};
-  scene.gBuffer.init(SCR_WIDTH, SCR_WIDTH, gBufferTexs, true);
+  scene.gBuffer.init(SCR_WIDTH, SCR_HEIGHT, gBufferTexs, true);
   scene.generateFBO(SCR_WIDTH, SCR_HEIGHT);
   scene.generateBlurFBO(SCR_WIDTH, SCR_HEIGHT);
 
@@ -149,12 +149,12 @@ int main() {
       {GL_FRAGMENT_SHADER, "../src/shaders/gbuffer/gbufferFrag.shader"}};
   ShaderProgram gbufferShader = ShaderProgram(gbufferShaders);
 
-  // geometry pass: render scene's geometry/color data into gbuffer
+  // light pass
   std::vector<ShaderInfo> lightpassShaders{
       {GL_VERTEX_SHADER, "../src/shaders/gbuffer/lightpassVertex.shader"},
       {GL_FRAGMENT_SHADER, "../src/shaders/gbuffer/lightpassFrag.shader"}};
   ShaderProgram lightpassShader = ShaderProgram(lightpassShaders);
-#endif
+
   /**
    * render loop
    */
@@ -162,9 +162,23 @@ int main() {
 
     displayManager.interactionCallback();
 
+    // shadow map
+    directShadowShader.use();
+    Render::prepare(nullptr, displayManager);
+    std::set<LightType> directSet;
+    directSet.insert(DIRECT);
+    Render::renderShadowMap(scene, directShadowShader, directSet);
+
+    pointShadowShader.use();
+    Render::prepare(nullptr, displayManager);
+    std::set<LightType> pointSet;
+    pointSet.insert(POINT);
+    pointSet.insert(SPOT);
+    Render::renderShadowMap(scene, pointShadowShader, pointSet);
+
     // geometry pass
-    gbufferShader.use();
     Render::prepare(&camera, displayManager);
+    gbufferShader.use();
     Render::renderGBuffer(gbufferShader, scene);
 
     // light pass
@@ -178,24 +192,16 @@ int main() {
                       GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    // post- processing
+
     // light cubes
     simplestShader.use();
     for (Light *light : lights) {
       Render::renderLight(simplestShader, light->position, light->diffuse);
     }
 
-    //    directShadowShader.use();
-    //    Render::prepare(nullptr, displayManager);
-    //    std::set<LightType> directSet;
-    //    directSet.insert(DIRECT);
-    //    Render::renderShadowMap(scene, directShadowShader, directSet);
-    //
-    //    pointShadowShader.use();
-    //    Render::prepare(nullptr, displayManager);
-    //    std::set<LightType> pointSet;
-    //    pointSet.insert(POINT);
-    //    pointSet.insert(SPOT);
-    //    Render::renderShadowMap(scene, pointShadowShader, pointSet);
+    //    skyBoxShader.use();
+    //    Render::renderSkyBox(scene, skyBoxShader);
 
     //    debugShadowShader.use();
     //    Render::prepare(&camera, displayManager);

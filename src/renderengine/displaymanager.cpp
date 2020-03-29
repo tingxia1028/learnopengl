@@ -79,15 +79,7 @@ void DisplayManager::processInput(GLFWwindow *window, float deltaTime) {
     camera->processKeyboard(LEFT, deltaTime);
   else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     camera->processKeyboard(RIGHT, deltaTime);
-  else if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-    GLint viewPort[4] = {0};
-    glGetIntegerv(GL_VIEWPORT, viewPort);
-    int arrLen = viewPort[2] * viewPort[3] * 3;
-    GLbyte *colorArr = new GLbyte[arrLen];
-    glReadPixels(viewPort[0], viewPort[1], viewPort[2], viewPort[3], GL_RGB,
-                 GL_UNSIGNED_BYTE, colorArr);
-    std::string outputFile("../output/temp.png");
-  } else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+  else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
     if (camera->exposure > 0.001f)
       camera->exposure -= 0.001f;
     else

@@ -13,7 +13,7 @@ in VS_OUT{
 } fs_in;
 
 
-uniform struct Material{
+struct Material{
     vec3 diffuseColor;
     vec3 specularColor;
     float shininess;
@@ -25,8 +25,11 @@ uniform struct Material{
     sampler2D specular;
     sampler2D normal;
     sampler2D depth;
-} material;
+};
+
+#define MATERIALS 1
 uniform vec3 viewPos;
+uniform Material materials[MATERIALS];
 
 const float heightScale = 0.1;
 const float minLayers = 8;
@@ -38,8 +41,8 @@ void main()
 {
     gPosition = fs_in.FragPos;
     vec3 norm = fs_in.Normal;
-    if(material.hasNormalMap){
-        norm = texture(material.normal, fs_in.TexCoords).rgb;
+    if(materials[0].hasNormalMap){
+        norm = texture(materials[0].normal, fs_in.TexCoords).rgb;
         norm = normalize(norm * 2.0 - 1.0);
         norm = normalize(fs_in.TBN * norm);
     }else{
@@ -49,25 +52,25 @@ void main()
     vec3 viewDir = normalize(viewPos - fs_in.FragPos);
     vec3 tangentViewDir = normalize(fs_in.TBN * viewPos - fs_in.TBN * fs_in.FragPos);
     vec2 texCoord;
-    if(material.hasDepthMap){
-        texCoord = ParallaxMapping(material, fs_in.TexCoords, tangentViewDir);
+    if(materials[0].hasDepthMap){
+        texCoord = ParallaxMapping(materials[0], fs_in.TexCoords, tangentViewDir);
         if(texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
             discard;
     }else{
         texCoord = fs_in.TexCoords;
     }
 
-    if(material.hasDiffuseTex){
-        gDiffuse = vec3(texture(material.diffuse, texCoord));
+    if(materials[0].hasDiffuseTex){
+        gDiffuse = vec3(texture(materials[0].diffuse, texCoord));
     }else{
-        gDiffuse = material.diffuseColor;
+        gDiffuse = materials[0].diffuseColor;
     }
-    if(material.hasSpecularTex){
-        gSpecularShininess.rgb = vec3(texture(material.specular, texCoord));
+    if(materials[0].hasSpecularTex){
+        gSpecularShininess.rgb = vec3(texture(materials[0].specular, texCoord));
     }else{
-        gSpecularShininess.rgb = material.specularColor;
+        gSpecularShininess.rgb = materials[0].specularColor;
     }
-    gSpecularShininess.a = material.shininess;
+    gSpecularShininess.a = materials[0].shininess;
 }
 
 vec2 ParallaxMapping(Material material, vec2 texCoords, vec3 viewDir){

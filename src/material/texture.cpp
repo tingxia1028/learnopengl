@@ -42,8 +42,8 @@ bool Texture::load() {
     glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER,
                     GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(textureTarget, 0);
 
     stbi_image_free(data);
     return true;
