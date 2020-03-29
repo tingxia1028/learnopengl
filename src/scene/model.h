@@ -2,6 +2,7 @@
 #ifndef OPENGL_MODEL_H
 #define OPENGL_MODEL_H
 
+#include "../light/light.h"
 #include "../material/material.h"
 #include "../transformation/rotate.h"
 #include "../transformation/transformation.h"
@@ -18,21 +19,20 @@ public:
   Model() = default;
   ~Model() = default;
   Model(const std::string &path, Transformation &transformation);
-  void draw(ShaderProgram &shaderProgram);
+  void draw(ShaderProgram &shaderProgram, std::vector<Light *> &lights,
+            bool withMaterials = false);
 
   std::vector<Mesh> meshes;
   Transformation transformation;
-  std::map<std::string, TextureData> loadedTextures;
+  std::map<std::string, Texture> loadedTextures;
   std::string directory;
 
 private:
   void loadModel(const std::string &path);
   void processNode(aiNode *node, const aiScene *scene);
   Mesh processMesh(aiMesh *mesh, const aiScene *scene);
-  std::vector<TextureData> loadMaterialTextures(aiMaterial *mat,
-                                                aiTextureType type,
-                                                TextureType typeName);
-  unsigned int TextureFromFile(const char *path, const std::string &directory);
+  std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type,
+                                            Texture::TextureType typeName);
   glm::vec3 transformAIcolor(aiColor3D aiColor3D);
 };
 

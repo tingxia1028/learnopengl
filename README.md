@@ -193,3 +193,90 @@ takes as input a set of vertices that form a single primitive e.g. a point or a 
   - offScreen MSAA
   - custom anti-aliasing algorithm
 - FXAA, SMAA, TXAA
+
+## Advanced Lighting
+### Advanced lighting
+ - blinn phong 
+   - disadvantage of phong model
+   sharp edge when angle(reflectDir, viewDir) > 90
+  - specular <- degree(normal, halfDir(lightDir, viewDir))
+  - halfDir need higher shininess
+
+### gamma correction
+- why 
+  human perceptive brightness vs physical brightness
+- how to correct
+  color^(1/2.2)
+  - opengl built-in 
+     glEnable(GL_FRAMEBUFFER_SRGB);
+  - realize ourserlf
+    - last fragment shader
+    - read diffuse texture using SRGB format to get linear color
+    
+### shadows
+- shadow map
+  - principle
+  same with depth buffer, the depth values show the first fragment visible from the light's perspective.
+  - realize
+     two passes:
+     - render the shadow map
+        - only care about the depth component(z)
+     - render the scene according to the shadow map
+   - problem
+       - shadow acne  -> shadow bias
+        change the amount of bias based on the surface angle towards the light
+       - Peter panning 
+        only for solid objects
+        glCullFace(GL_FRONT);
+       - Over sampling
+       imaginary region of light and a large part outside this area is in shadow. cause depth map's wrapping options to GL_REPEAT.
+      - pcf(percentage-closer filtering)
+       sample more than once from the depth map
+
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/shadowmap.png" alt="shadow" width="300" height="200" />
+
+
+### normal mapping
+   not flat surface -> normals per fragment -> texture2D to store, color r,g,b represents x,y,z
+   -  tangent space
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/normalmap.png" alt="normalmap" width="260" height="300" />
+
+### parallax mapping
+two way to realize:
+  Parallax mapping belongs to the family of displacement mapping techniques that displace or offset vertices based on geometrical information stored inside a texture.
+  alter the texture coordinates, to texCoord + height(A) * viewDir
+  
+  -  Steep Parallax Mapping
+    divides the total depth range into multiple layers of the same height/depth
+  - Relief Parallax Mapping
+  - Parallax Occlusion Mapping
+   linear interpolation
+  
+### HDR(high dynamic range)
+  a specifically bright area with multiple bright light sources that as a total sum exceed 1.0.
+  - tone mapping
+  converting HDR values to LDR values
+  - floating point framebuffers
+   store floating point values outside the default range of 0.0 and 1.0
+
+### bloom
+   - extracting bright color
+    Multiple Render Targets (MRT) 
+    calculate the brightness of a fragment by properly transforming it to grayscale first   
+   - Gaussian blur
+   two-pass: vertical and horizontal
+  
+### deferred rendering
+  - two passed
+      - geometry pass -> G-buffer
+      - lighting pass
+  - disadvantages
+      - need more memory
+      - don't support blend and MMSA
+  - advantages
+     nr_objects * nr_lights to nr_objects + nr_lights 
+  - G-buffer
+    The G-buffer is the collective term of all textures used to store lighting-relevant data for the final lighting pass.
+  - Combining deferred rendering with forward rendering
+    copy the depth information stored in the geometry pass into the default framebuffer's depth buffer.   
+  - light volumes

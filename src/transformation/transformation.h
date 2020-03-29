@@ -4,6 +4,7 @@
 
 #include "rotate.h"
 #include <glm/vec3.hpp>
+#include <memory>
 class Transformation {
 public:
   Transformation() = default;

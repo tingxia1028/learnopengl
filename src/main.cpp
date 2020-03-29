@@ -3,45 +3,27 @@
 #endif
 
 #include "light/directionallight.h"
-#include "light/flashlight.h"
-#include "light/pointlight.h"
-#include "light/spotlight.h"
 #include "renderengine/displaymanager.h"
 #include "renderengine/render.h"
-#include "renderengine/shader.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
-constexpr int SCR_WIDTH = 800;
-constexpr int SCR_HEIGHT = 600;
-
-Camera camera = Camera(glm::vec3(-0.5f, -0.3f, 0.0f));
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void mouse_callback(GLFWwindow *window, double xoffset, double yoffset);
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window, float deltaTime);
+int SCR_WIDTH = 800;
+int SCR_HEIGHT = 600;
 
 int main() {
   /**
    * window
    */
+  Camera camera = Camera(glm::vec3(-0.5f, -0.3f, 0.0f));
   DisplayManager displayManager =
-      DisplayManager(SCR_WIDTH, SCR_HEIGHT, "xt screen");
+      DisplayManager(SCR_WIDTH, SCR_HEIGHT, "xt screen", &camera);
   displayManager.init();
   if (!displayManager.create()) {
     return -1;
   }
-  glfwSetFramebufferSizeCallback(displayManager.getWindow(),
-                                 framebuffer_size_callback);
-  glfwSetCursorPosCallback(displayManager.getWindow(), mouse_callback);
-  glfwSetScrollCallback(displayManager.getWindow(), scroll_callback);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -53,8 +35,8 @@ int main() {
    */
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_STENCIL_TEST);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  //  glEnable(GL_BLEND);
+  //  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
   glEnable(GL_MULTISAMPLE);
@@ -64,27 +46,28 @@ int main() {
    */
   std::vector<Model> models;
   Transformation transformation(glm::vec3(0.0f, -0.75f, 0.0f),
-                                glm::vec3(0.0002f, 0.0002f, 0.0002f), nullptr);
+                                glm::vec3(0.0005f, 0.0005f, 0.0005f), nullptr);
   Model model("../resources/Sponza-master/sponza.obj", transformation);
   models.push_back(model);
 
   // lights
   std::vector<Light *> lights;
   glm::vec3 ambientColor(0.2f, 0.2f, 0.2f);
-  glm::vec3 diffuseColor(0.9f, 0.9f, 0.9f);
+  glm::vec3 diffuseColor(0.5f, 0.5f, 0.5f);
   glm::vec3 specularColor(1.0f, 1.0f, 1.0f);
   DirectionalLight directionalLight(ambientColor, diffuseColor, specularColor,
                                     LightType ::DIRECT,
-                                    glm::vec3(-0.2f, -1.0f, -0.3f));
+                                    glm::vec3(-0.05f, -0.5f, 0.05f));
   lights.push_back(&directionalLight);
-  DirectionalLight directionalLight1(ambientColor, diffuseColor, specularColor,
-                                     LightType ::DIRECT,
-                                     glm::vec3(0.2f, 1.0f, -0.3f));
-  lights.push_back(&directionalLight1);
-  PointLight pointLight(ambientColor, diffuseColor, specularColor,
-                        LightType ::POINT, glm::vec3(-0.25f, 1.0f, 0.0f), 1.0f,
-                        0.09f, 0.032f);
-  lights.push_back(&pointLight);
+  //  DirectionalLight directionalLight1(ambientColor, diffuseColor,
+  //  specularColor,
+  //                                     LightType ::DIRECT,
+  //                                     glm::vec3(-0.01f, 0.65f, -0.01f));
+  //  lights.push_back(&directionalLight1);
+  //  PointLight pointLight(ambientColor, diffuseColor, specularColor,
+  //                        LightType ::POINT, glm::vec3(0.0f, -0.6f,
+  //                        0.0f), 1.0f, 0.09f, 0.032f);
+  //  lights.push_back(&pointLight);
 
   // skyBox
   std::vector<std::string> skyTexs{
@@ -94,6 +77,14 @@ int main() {
   SkyBox skyBox(skyTexs);
 
   Scene scene = Scene(models, &camera, lights, &skyBox);
+  std::vector<GBufferTexture> gBufferTexs{
+      {GBUFFER_TEXTURE_TYPE_POSITION, "gPosition"},
+      {GBUFFER_TEXTRURE_NORMAL, "gNormal"},
+      {GBUFFER_TEXTURE_DIFFUSE, "gDiffuse"},
+      {GBUFFER_TEXTURE_SPECULAR_SHININESS, "gSpecularShininess"}};
+  scene.gBuffer.init(SCR_WIDTH, SCR_HEIGHT, gBufferTexs, true);
+  scene.generateFBO(SCR_WIDTH, SCR_HEIGHT);
+  scene.generateBlurFBO(SCR_WIDTH, SCR_HEIGHT);
 
   /**
    * load shaders
@@ -104,11 +95,11 @@ int main() {
       {GL_FRAGMENT_SHADER, "../src/shaders/basic/fragment.shader"}};
   ShaderProgram modelShader = ShaderProgram(modelShaders);
 
-  // outline shaders
-  std::vector<ShaderInfo> outlineShaders{
-      {GL_VERTEX_SHADER, "../src/shaders/lightVertex.shader"},
-      {GL_FRAGMENT_SHADER, "../src/shaders/outlineFrag.shader"}};
-  ShaderProgram outlineShader = ShaderProgram(outlineShaders);
+  // simplest shaders: for outline, light objects, etc
+  std::vector<ShaderInfo> simplestShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/simplest/simpleVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/simplest/simpleFrag.shader"}};
+  ShaderProgram simplestShader = ShaderProgram(simplestShaders);
 
   // skyBox shaders
   std::vector<ShaderInfo> skyBoxShaders{
@@ -123,30 +114,131 @@ int main() {
       {GL_FRAGMENT_SHADER, "../src/shaders/normal/normalFrag.shader"}};
   ShaderProgram normalShader = ShaderProgram(normalShaders);
 
-  float deltaTime = 0.0f;
-  float lastFrame = 0.0f;
+  // shadow map shaders
+  std::vector<ShaderInfo> directShadowShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/shadow/directionLightVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/shadow/directionLightFrag.shader"}};
+  ShaderProgram directShadowShader = ShaderProgram(directShadowShaders);
+  std::vector<ShaderInfo> pointShadowShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/shadow/pointLightVertex.shader"},
+      {GL_GEOMETRY_SHADER, "../src/shaders/shadow/pointLightGeo.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/shadow/pointLightFrag.shader"}};
+  ShaderProgram pointShadowShader = ShaderProgram(pointShadowShaders);
+
+  // debug shadow map shaders
+  std::vector<ShaderInfo> debugShadowShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/shadow/debugDepthVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/shadow/debugDepthFrag.shader"}};
+  ShaderProgram debugShadowShader = ShaderProgram(debugShadowShaders);
+
+  // deferred shaders
+  std::vector<ShaderInfo> deferredShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/hdr/hdrVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/hdr/hdrFrag.shader"}};
+  ShaderProgram deferredShader = ShaderProgram(deferredShaders);
+
+  // blur shaders
+  std::vector<ShaderInfo> blurShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/blur/blurVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/blur/blurFrag.shader"}};
+  ShaderProgram blurShader = ShaderProgram(blurShaders);
+
+  // geometry pass: render scene's geometry/color data into gbuffer
+  std::vector<ShaderInfo> gbufferShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/gbuffer/gbufferVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/gbuffer/gbufferFrag.shader"}};
+  ShaderProgram gbufferShader = ShaderProgram(gbufferShaders);
+
+  // light pass
+  std::vector<ShaderInfo> lightpassShaders{
+      {GL_VERTEX_SHADER, "../src/shaders/gbuffer/lightpassVertex.shader"},
+      {GL_FRAGMENT_SHADER, "../src/shaders/gbuffer/lightpassFrag.shader"}};
+  ShaderProgram lightpassShader = ShaderProgram(lightpassShaders);
 
   /**
    * render loop
    */
-  Render render = Render();
   while (!displayManager.shouldClose()) {
-    float currentFrame = glfwGetTime();
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
 
-    processInput(displayManager.getWindow(), deltaTime);
+    displayManager.interactionCallback();
 
-    render.prepare(camera);
+    // shadow map
+    directShadowShader.use();
+    Render::prepare(nullptr, displayManager);
+    std::set<LightType> directSet;
+    directSet.insert(DIRECT);
+    Render::renderShadowMap(scene, directShadowShader, directSet);
 
-    modelShader.use();
-    render.render(scene, modelShader);
+    pointShadowShader.use();
+    Render::prepare(nullptr, displayManager);
+    std::set<LightType> pointSet;
+    pointSet.insert(POINT);
+    pointSet.insert(SPOT);
+    Render::renderShadowMap(scene, pointShadowShader, pointSet);
+
+    // geometry pass
+    Render::prepare(&camera, displayManager);
+    gbufferShader.use();
+    Render::renderGBuffer(gbufferShader, scene);
+
+    // light pass
+    lightpassShader.use();
+    Render::renderLightPass(lightpassShader, scene);
+
+    // copy geometry's depth buffer to default framebuffer
+    scene.gBuffer.bindForRead();
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT,
+                      GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // post- processing
+
+    // light cubes
+    simplestShader.use();
+    for (Light *light : lights) {
+      Render::renderLight(simplestShader, light->position, light->diffuse);
+    }
+
+    //    skyBoxShader.use();
+    //    Render::renderSkyBox(scene, skyBoxShader);
+
+    //    debugShadowShader.use();
+    //    Render::prepare(&camera, displayManager);
+    //    modelShader.bindUniformBlock("Matrices", 0);
+    //    Render::debugRenderShadowMap(scene, debugShadowShader);
+
+    // can use skyBoxShader to draw cube shadow map
+    //    skyBoxShader.use();
+    //    Render::prepare(&camera, displayManager);
+    //    Render::renderSkyBox(scene, skyBoxShader);
+
+    //    glBindFramebuffer(GL_FRAMEBUFFER, scene.deferredFBO);
+    //    modelShader.use();
+    //    Render::prepare(&camera, displayManager);
+    //    modelShader.bindUniformBlock("Matrices", 0);
+    //    Render::render(scene, modelShader, true, true, true);
+    //
+    //    simplestShader.use();
+    //    for (Light *light : lights) {
+    //      Render::renderLight(simplestShader, light->position,
+    //      light->diffuse);
+    //    }
+    //
+    //    skyBoxShader.use();
+    //    Render::renderSkyBox(scene, skyBoxShader);
+    //    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //
+    //    // blur
+    //    blurShader.use();
+    //    Render::renderBlur(blurShader, scene);
+    //
+    //    deferredShader.use();
+    //    Render::prepare(nullptr, displayManager);
+    //    Render::deferredRender(deferredShader, scene);
 
     //    normalShader.use();
-    //    render.render(scene, normalShader);
-
-    skyBoxShader.use();
-    render.renderSkyBox(scene, skyBoxShader);
+    //    Render::render(scene, normalShader);
 
     displayManager.afterward();
     // poll IO events, eg. mouse moved etc.
@@ -159,44 +251,4 @@ int main() {
   glfwTerminate();
 
   return 0;
-}
-
-void processInput(GLFWwindow *window, float deltaTime) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
-    glfwSetWindowShouldClose(window, true);
-  }
-
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    camera.processKeyboard(FORWARD, deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    camera.processKeyboard(BACKWARD, deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    camera.processKeyboard(LEFT, deltaTime);
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    camera.processKeyboard(RIGHT, deltaTime);
-}
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-  glViewport(0, 0, width, height);
-}
-
-void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
-  if (firstMouse) {
-    lastX = xpos;
-    lastY = ypos;
-    firstMouse = false;
-  }
-
-  float xoffset = xpos - lastX;
-  float yoffset =
-      lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-  lastX = xpos;
-  lastY = ypos;
-
-  camera.processMouseMovement(xoffset, yoffset);
-}
-
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-  camera.processMouseScroll(yoffset);
 }

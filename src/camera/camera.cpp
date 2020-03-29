@@ -1,17 +1,32 @@
 
 #include "camera.h"
+#include "../renderengine/displaymanager.h"
 #include <glad/glad.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
-Camera::Camera(const glm::vec3 position, const glm::vec3 worldUp,
-               const float angleXZ, float angleXY, float fov, float width,
-               float height, float near, float far)
-    : position(position), worldUp(worldUp), angleXZ(angleXZ), angleXY(angleXY),
-      movementSpeed(SPEED), mouseSensitivity(SENSITIVITY), fov(fov),
-      width(width), height(height), near(near), far(far) {
+// default camera attribute
+const float ANGLEXZ = 0.0f;
+const float ANGLEXY = 0.0f;
+const float SPEED = 0.5f;
+const float SENSITIVITY = 0.2f;
+const float ZOOM = 45.0f;
+const float NEAR = 0.01f;
+const float FAR = 100.0f;
+
+Camera::Camera(const glm::vec3 &position, float width, float height, float near,
+               float far)
+    : position(position), worldUp(WORLD_UP), width(width), height(height),
+      near(near), far(far) {
+  updateCameraData();
+}
+
+Camera::Camera(const glm::vec3 position)
+    : position(position), worldUp(WORLD_UP), angleXZ(ANGLEXZ), angleXY(ANGLEXY),
+      movementSpeed(SPEED), mouseSensitivity(SENSITIVITY), fov(ZOOM),
+      width(800), height(600), near(NEAR), far(FAR) {
   updateCameraData();
 }
 
@@ -61,9 +76,12 @@ glm::mat4 Camera::getViewMatrix() {
   return glm::lookAt(position, position + front, up);
 }
 
-glm::mat4 Camera::getProjectionMatrix() {
-  return glm::perspective(glm::radians(fov), float(width) / float(height), near,
-                          far);
+glm::mat4 Camera::getProjectionMatrix(bool isPerspective) {
+  return isPerspective
+             ? glm::perspective(glm::radians(fov), float(width) / float(height),
+                                near, far)
+             : glm::ortho(-width / 2.0f, width / 2.0f, -height / 2.0f,
+                          height / 2.0f, near, far);
 }
 
 void Camera::updateCameraData() {
@@ -75,5 +93,6 @@ void Camera::updateCameraData() {
   right = glm::normalize(glm::cross(front, worldUp));
   up = glm::normalize(glm::cross(right, front));
 }
+
 const glm::vec3 &Camera::getPosition() const { return position; }
 const glm::vec3 &Camera::getFront() const { return front; }
