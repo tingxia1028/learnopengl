@@ -9,7 +9,7 @@ class Texture {
 public:
   Texture();
   ~Texture();
-  enum TextureType { DIFFUSE, SPECULAR, NORMAL, HEIGHT };
+  enum class TextureType { DIFFUSE, SPECULAR, NORMAL, HEIGHT };
   Texture(GLenum textureTarget, const std::string &fileName,
           TextureType &textureType);
   bool load();

@@ -72,13 +72,13 @@ void DisplayManager::processInput(GLFWwindow *window, float deltaTime) {
   }
 
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    camera->processKeyboard(FORWARD, deltaTime);
+    camera->processKeyboard(CameraMovement::FORWARD, deltaTime);
   else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    camera->processKeyboard(BACKWARD, deltaTime);
+    camera->processKeyboard(CameraMovement::BACKWARD, deltaTime);
   else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    camera->processKeyboard(LEFT, deltaTime);
+    camera->processKeyboard(CameraMovement::LEFT, deltaTime);
   else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    camera->processKeyboard(RIGHT, deltaTime);
+    camera->processKeyboard(CameraMovement::RIGHT, deltaTime);
   else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
     if (camera->exposure > 0.001f)
       camera->exposure -= 0.001f;

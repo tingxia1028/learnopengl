@@ -7,11 +7,11 @@
 #include <glm/vec3.hpp>
 #include <string>
 
-enum LightType : int { DIRECT, POINT, SPOT, FLASH };
+enum class LightType : int { DIRECT, POINT, SPOT, FLASH };
 
 static std::string LightTypeToString(LightType lightType) {
   std::string table[] = {"directLight", "pointLight", "spotLight", "spotLight"};
-  return table[lightType];
+  return table[(int)lightType];
 }
 
 class Light {

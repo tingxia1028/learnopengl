@@ -166,14 +166,14 @@ int main() {
     directShadowShader.use();
     Render::prepare(nullptr, displayManager);
     std::set<LightType> directSet;
-    directSet.insert(DIRECT);
+    directSet.insert(LightType::DIRECT);
     Render::renderShadowMap(scene, directShadowShader, directSet);
 
     pointShadowShader.use();
     Render::prepare(nullptr, displayManager);
     std::set<LightType> pointSet;
-    pointSet.insert(POINT);
-    pointSet.insert(SPOT);
+    pointSet.insert(LightType::POINT);
+    pointSet.insert(LightType::SPOT);
     Render::renderShadowMap(scene, pointShadowShader, pointSet);
 
     // geometry pass

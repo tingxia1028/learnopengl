@@ -83,14 +83,14 @@ void Render::configureLights(std::vector<Light *> &lights,
     light->depthMapIndex = depthMapNum++;
     std::string lightTypeStr = LightTypeToString(light->lightType);
     switch (light->lightType) {
-    case DIRECT:
+    case LightType::DIRECT:
       lightIndexStr = std::to_string(dirNum++);
       break;
-    case POINT:
+    case LightType::POINT:
       lightIndexStr = std::to_string(pointNum++);
       break;
-    case FLASH:
-    case SPOT:
+    case LightType::FLASH:
+    case LightType::SPOT:
       lightIndexStr = std::to_string(spotNum++);
       break;
     }
