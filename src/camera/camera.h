@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/vec3.hpp>
 
-enum CameraMovement { FORWARD, BACKWARD, LEFT, RIGHT };
+enum class CameraMovement { FORWARD, BACKWARD, LEFT, RIGHT };
 
 class Camera {
 public:

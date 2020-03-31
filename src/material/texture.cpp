@@ -17,7 +17,7 @@ bool Texture::load() {
   int width, height, nrComponents;
   unsigned char *data =
       stbi_load(fileName.c_str(), &width, &height, &nrComponents, 0);
-  bool isDiffuse = (type == DIFFUSE);
+  bool isDiffuse = (type == TextureType::DIFFUSE);
   if (data) {
     GLenum format;
     GLenum internalFormat;
@@ -61,5 +61,5 @@ void Texture::bind(GLenum textureUnit) {
 
 std::string Texture::TexTypeToString() {
   std::string table[] = {"diffuse", "specular", "normal", "depth"};
-  return table[type];
+  return table[(int)type];
 }
