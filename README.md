@@ -18,3 +18,8 @@ basic render based on opengl.
   - skybox
   - anti-aliasing
   - gamma correction
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/light.png" alt="light" width="300" height="200" />
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/light.png" alt="light" width="300" height="200" />
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/light.png" alt="light" width="300" height="200" />
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/light.png" alt="light" width="300" height="200" />
+<img src="https://github.com/tingxia1028/learnopengl/blob/master/readmeimgs/light.png" alt="light" width="300" height="200" />
